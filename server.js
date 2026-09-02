@@ -19,7 +19,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const ADMIN_USERNAME =
-    process.env.ADMIN_USERNAME || "SuperAdmin";
+    String(process.env.ADMIN_USERNAME || "SuperAdmin").trim();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
@@ -41,6 +41,8 @@ if (!ADMIN_PASSWORD) {
 /* ============================================================
    EXPRESS CONFIGURATION
 ============================================================ */
+
+app.disable("x-powered-by");
 
 app.set("trust proxy", 1);
 
@@ -75,10 +77,20 @@ const allowedOrigins = (process.env.FRONTEND_URL || "")
 app.use(
     cors({
         origin: function (origin, callback) {
+            /*
+             * Requests without an Origin header include:
+             * - server-to-server requests
+             * - health checks
+             * - some command-line tools
+             */
             if (!origin) {
                 return callback(null, true);
             }
 
+            /*
+             * If FRONTEND_URL is not configured, preserve the
+             * existing functionality by allowing the request.
+             */
             if (allowedOrigins.length === 0) {
                 return callback(null, true);
             }
@@ -111,13 +123,15 @@ const pool = new Pool({
 
     idleTimeoutMillis: 30000,
 
-    connectionTimeoutMillis: 10000
+    connectionTimeoutMillis: 10000,
+
+    allowExitOnIdle: false
 });
 
 pool.on("error", error => {
     console.error(
         "Unexpected PostgreSQL pool error:",
-        error
+        error.message
     );
 });
 
@@ -132,7 +146,7 @@ async function initDB() {
         await client.query("BEGIN");
 
         /* ====================================================
-           USERS TABLE
+           USERS
         ==================================================== */
 
         await client.query(`
@@ -162,8 +176,7 @@ async function initDB() {
 
         await client.query(`
             ALTER TABLE users
-            ADD COLUMN IF NOT EXISTS created_at
-            TIMESTAMPTZ DEFAULT NOW()
+            ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()
         `);
 
         await client.query(`
@@ -179,7 +192,7 @@ async function initDB() {
         `);
 
         /* ====================================================
-           POSTS TABLE
+           POSTS
         ==================================================== */
 
         await client.query(`
@@ -228,14 +241,12 @@ async function initDB() {
 
         await client.query(`
             ALTER TABLE posts
-            ADD COLUMN IF NOT EXISTS created_at
-            TIMESTAMPTZ DEFAULT NOW()
+            ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()
         `);
 
         await client.query(`
             ALTER TABLE posts
-            ADD COLUMN IF NOT EXISTS updated_at
-            TIMESTAMPTZ DEFAULT NOW()
+            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()
         `);
 
         await client.query(`
@@ -287,7 +298,7 @@ async function initDB() {
         `);
 
         /* ====================================================
-           ADVERTS TABLE
+           ADVERTS
         ==================================================== */
 
         await client.query(`
@@ -329,8 +340,7 @@ async function initDB() {
 
         await client.query(`
             ALTER TABLE adverts
-            ADD COLUMN IF NOT EXISTS created_at
-            TIMESTAMPTZ DEFAULT NOW()
+            ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()
         `);
 
         await client.query(`
@@ -370,7 +380,7 @@ async function initDB() {
         `);
 
         /* ====================================================
-           SITE SETTINGS TABLE
+           SITE SETTINGS
         ==================================================== */
 
         await client.query(`
@@ -394,8 +404,7 @@ async function initDB() {
 
         await client.query(`
             ALTER TABLE site_settings
-            ADD COLUMN IF NOT EXISTS updated_at
-            TIMESTAMPTZ DEFAULT NOW()
+            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()
         `);
 
         await client.query(`
@@ -440,12 +449,15 @@ async function initDB() {
         `);
 
         /* ====================================================
-           DEFAULT SETTINGS
+           DEFAULT WHATSAPP SETTINGS
         ==================================================== */
 
         await client.query(`
             INSERT INTO site_settings
-                (setting_key, setting_value)
+                (
+                    setting_key,
+                    setting_value
+                )
             VALUES
                 (
                     'whatsapp_phone',
@@ -476,7 +488,7 @@ async function initDB() {
         `);
 
         /* ====================================================
-           POSTS UPDATED_AT TRIGGER
+           POSTS TRIGGER
         ==================================================== */
 
         await client.query(`
@@ -492,7 +504,7 @@ async function initDB() {
         `);
 
         /* ====================================================
-           SITE SETTINGS UPDATED_AT TRIGGER
+           SETTINGS TRIGGER
         ==================================================== */
 
         await client.query(`
@@ -527,14 +539,25 @@ async function initDB() {
 
         if (existingAdmin.rows.length === 0) {
             const passwordHash =
-                await bcrypt.hash(ADMIN_PASSWORD, 12);
+                await bcrypt.hash(
+                    ADMIN_PASSWORD,
+                    12
+                );
 
             await client.query(
                 `
                     INSERT INTO users
-                        (username, pin, role)
+                        (
+                            username,
+                            pin,
+                            role
+                        )
                     VALUES
-                        ($1, $2, 'admin')
+                        (
+                            $1,
+                            $2,
+                            'admin'
+                        )
                 `,
                 [
                     ADMIN_USERNAME,
@@ -546,7 +569,8 @@ async function initDB() {
                 `Created administrator account: ${ADMIN_USERNAME}`
             );
         } else {
-            const admin = existingAdmin.rows[0];
+            const admin =
+                existingAdmin.rows[0];
 
             const alreadyHashed =
                 typeof admin.pin === "string" &&
@@ -554,7 +578,10 @@ async function initDB() {
 
             if (!alreadyHashed) {
                 const passwordHash =
-                    await bcrypt.hash(ADMIN_PASSWORD, 12);
+                    await bcrypt.hash(
+                        ADMIN_PASSWORD,
+                        12
+                    );
 
                 await client.query(
                     `
@@ -590,12 +617,21 @@ async function initDB() {
         console.log(
             "Database initialized successfully."
         );
+
+        return true;
     } catch (error) {
-        await client.query("ROLLBACK");
+        try {
+            await client.query("ROLLBACK");
+        } catch (rollbackError) {
+            console.error(
+                "Database rollback failed:",
+                rollbackError.message
+            );
+        }
 
         console.error(
             "Database initialization failed:",
-            error
+            error.message
         );
 
         throw error;
@@ -623,25 +659,37 @@ function createAuthToken(user) {
 }
 
 function getTokenFromRequest(req) {
-    const cookies = req.headers.cookie || "";
+    const cookies =
+        req.headers.cookie || "";
 
-    const authCookie = cookies
-        .split(";")
-        .map(item => item.trim())
-        .find(
-            item => item.startsWith("propulse_auth=")
-        );
+    const authCookie =
+        cookies
+            .split(";")
+            .map(item => item.trim())
+            .find(
+                item =>
+                    item.startsWith(
+                        "propulse_auth="
+                    )
+            );
 
     if (!authCookie) {
         return null;
     }
 
-    return decodeURIComponent(
+    const rawToken =
         authCookie
             .split("=")
             .slice(1)
-            .join("=")
-    );
+            .join("=");
+
+    try {
+        return decodeURIComponent(
+            rawToken
+        );
+    } catch {
+        return rawToken;
+    }
 }
 
 function authenticate(req, res, next) {
@@ -652,16 +700,20 @@ function authenticate(req, res, next) {
         if (!token) {
             return res.status(401).json({
                 success: false,
-                error: "Authentication required."
+                error:
+                    "Authentication required."
             });
         }
 
         const decoded =
-            jwt.verify(token, JWT_SECRET);
+            jwt.verify(
+                token,
+                JWT_SECRET
+            );
 
         req.user = decoded;
 
-        next();
+        return next();
     } catch (error) {
         return res.status(401).json({
             success: false,
@@ -683,7 +735,7 @@ function requireAdmin(req, res, next) {
         });
     }
 
-    next();
+    return next();
 }
 
 /* ============================================================
@@ -704,7 +756,8 @@ function clean(value, maxLength = 10000) {
 }
 
 function validId(value) {
-    const id = Number(value);
+    const id =
+        Number(value);
 
     if (
         !Number.isInteger(id) ||
@@ -717,6 +770,73 @@ function validId(value) {
 }
 
 /* ============================================================
+   BASIC STATUS
+============================================================ */
+
+app.get(
+    "/",
+    (req, res, next) => {
+        const indexPath =
+            path.join(
+                __dirname,
+                "index.html"
+            );
+
+        res.sendFile(
+            indexPath,
+            error => {
+                if (error) {
+                    return next(error);
+                }
+            }
+        );
+    }
+);
+
+/* ============================================================
+   HEALTH CHECK
+============================================================ */
+
+app.get(
+    "/api/health",
+    async (req, res) => {
+        try {
+            const result =
+                await pool.query(
+                    "SELECT NOW() AS database_time"
+                );
+
+            return res.status(200).json({
+                success: true,
+                database: "connected",
+                service:
+                    "ProPulse Sports Portal",
+                timestamp:
+                    new Date().toISOString(),
+                database_time:
+                    result.rows[0].database_time
+            });
+        } catch (error) {
+            console.error(
+                "Health check database error:",
+                error.message
+            );
+
+            return res.status(503).json({
+                success: false,
+                database: "unavailable",
+                service:
+                    "ProPulse Sports Portal",
+                error:
+                    NODE_ENV === "production"
+                        ? "Database unavailable."
+                        : error.message
+            });
+        }
+    }
+);
+
+/* ============================================================
    AUTH LOGIN
 ============================================================ */
 
@@ -725,10 +845,15 @@ app.post(
     async (req, res) => {
         try {
             const username =
-                clean(req.body.username, 100);
+                clean(
+                    req.body.username,
+                    100
+                );
 
             const pin =
-                String(req.body.pin || "");
+                String(
+                    req.body.pin || ""
+                );
 
             if (!username || !pin) {
                 return res.status(400).json({
@@ -753,7 +878,9 @@ app.post(
                     [username]
                 );
 
-            if (result.rows.length === 0) {
+            if (
+                result.rows.length === 0
+            ) {
                 return res.status(401).json({
                     success: false,
                     error:
@@ -764,7 +891,8 @@ app.post(
             const user =
                 result.rows[0];
 
-            let passwordMatches = false;
+            let passwordMatches =
+                false;
 
             if (
                 user.pin &&
@@ -776,6 +904,10 @@ app.post(
                         user.pin
                     );
             } else {
+                /*
+                 * Backward compatibility for
+                 * existing plaintext passwords.
+                 */
                 passwordMatches =
                     pin === user.pin;
 
@@ -816,24 +948,34 @@ app.post(
                 token,
                 {
                     httpOnly: true,
+
                     secure:
-                        NODE_ENV === "production",
+                        NODE_ENV ===
+                        "production",
+
                     sameSite: "lax",
+
                     maxAge:
-                        8 * 60 * 60 * 1000,
+                        8 *
+                        60 *
+                        60 *
+                        1000,
+
                     path: "/"
                 }
             );
 
             return res.json({
                 success: true,
-                username: user.username,
-                role: user.role
+                username:
+                    user.username,
+                role:
+                    user.role
             });
         } catch (error) {
             console.error(
                 "Login error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -853,13 +995,19 @@ app.get(
     "/api/auth/me",
     authenticate,
     async (req, res) => {
-        res.json({
+        return res.json({
             success: true,
-            username: req.user.username,
-            role: req.user.role
+            username:
+                req.user.username,
+            role:
+                req.user.role
         });
     }
 );
+
+/* ============================================================
+   AUTH LOGOUT
+============================================================ */
 
 app.post(
     "/api/auth/logout",
@@ -868,14 +1016,18 @@ app.post(
             "propulse_auth",
             {
                 httpOnly: true,
+
                 secure:
-                    NODE_ENV === "production",
+                    NODE_ENV ===
+                    "production",
+
                 sameSite: "lax",
+
                 path: "/"
             }
         );
 
-        res.json({
+        return res.json({
             success: true
         });
     }
@@ -928,9 +1080,8 @@ app.get(
                 `),
 
                 /*
-                   Never expose PINs or password hashes.
-                */
-
+                 * NEVER expose password/PIN hashes.
+                 */
                 pool.query(`
                     SELECT
                         id,
@@ -985,7 +1136,7 @@ app.get(
         } catch (error) {
             console.error(
                 "Content loading error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1010,13 +1161,22 @@ app.post(
                 validId(req.body.id);
 
             const type =
-                clean(req.body.type, 50);
+                clean(
+                    req.body.type,
+                    50
+                );
 
             const title =
-                clean(req.body.title, 300);
+                clean(
+                    req.body.title,
+                    300
+                );
 
             const body =
-                clean(req.body.body, 30000);
+                clean(
+                    req.body.body,
+                    30000
+                );
 
             const media_url =
                 clean(
@@ -1027,7 +1187,7 @@ app.post(
             const category =
                 clean(
                     req.body.category ||
-                    type,
+                        type,
                     100
                 );
 
@@ -1042,6 +1202,10 @@ app.post(
                         "Category, title and story body are required."
                 });
             }
+
+            /* =================================================
+               UPDATE EXISTING POST
+            ================================================= */
 
             if (id) {
                 const existing =
@@ -1067,7 +1231,8 @@ app.post(
                 }
 
                 if (
-                    req.user.role !== "admin" &&
+                    req.user.role !==
+                        "admin" &&
                     existing.rows[0].author !==
                         req.user.username
                 ) {
@@ -1108,6 +1273,10 @@ app.post(
                         result.rows[0]
                 });
             }
+
+            /* =================================================
+               CREATE NEW POST
+            ================================================= */
 
             const result =
                 await pool.query(
@@ -1150,7 +1319,7 @@ app.post(
         } catch (error) {
             console.error(
                 "Publish error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1172,7 +1341,9 @@ app.delete(
     async (req, res) => {
         try {
             const id =
-                validId(req.params.id);
+                validId(
+                    req.params.id
+                );
 
             if (!id) {
                 return res.status(400).json({
@@ -1230,7 +1401,7 @@ app.delete(
         } catch (error) {
             console.error(
                 "Delete post error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1259,7 +1430,9 @@ app.post(
                 );
 
             const pin =
-                String(req.body.pin || "");
+                String(
+                    req.body.pin || ""
+                );
 
             if (!username || !pin) {
                 return res.status(400).json({
@@ -1301,7 +1474,8 @@ app.post(
                         RETURNING
                             id,
                             username,
-                            role
+                            role,
+                            created_at
                     `,
                     [
                         username,
@@ -1327,7 +1501,7 @@ app.post(
 
             console.error(
                 "Create blogger error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1350,7 +1524,9 @@ app.delete(
     async (req, res) => {
         try {
             const id =
-                validId(req.params.id);
+                validId(
+                    req.params.id
+                );
 
             if (!id) {
                 return res.status(400).json({
@@ -1360,15 +1536,27 @@ app.delete(
                 });
             }
 
-            await pool.query(
-                `
-                    DELETE FROM users
-                    WHERE
-                        id = $1
-                        AND role = 'blogger'
-                `,
-                [id]
-            );
+            const result =
+                await pool.query(
+                    `
+                        DELETE FROM users
+                        WHERE
+                            id = $1
+                            AND role = 'blogger'
+                        RETURNING id
+                    `,
+                    [id]
+                );
+
+            if (
+                result.rows.length === 0
+            ) {
+                return res.status(404).json({
+                    success: false,
+                    error:
+                        "Blogger not found."
+                });
+            }
 
             return res.json({
                 success: true
@@ -1376,7 +1564,7 @@ app.delete(
         } catch (error) {
             console.error(
                 "Delete blogger error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1483,7 +1671,7 @@ app.post(
         } catch (error) {
             console.error(
                 "Password update error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1582,7 +1770,7 @@ app.post(
         } catch (error) {
             console.error(
                 "Advert creation error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1605,7 +1793,9 @@ app.delete(
     async (req, res) => {
         try {
             const id =
-                validId(req.params.id);
+                validId(
+                    req.params.id
+                );
 
             if (!id) {
                 return res.status(400).json({
@@ -1615,13 +1805,25 @@ app.delete(
                 });
             }
 
-            await pool.query(
-                `
-                    DELETE FROM adverts
-                    WHERE id = $1
-                `,
-                [id]
-            );
+            const result =
+                await pool.query(
+                    `
+                        DELETE FROM adverts
+                        WHERE id = $1
+                        RETURNING id
+                    `,
+                    [id]
+                );
+
+            if (
+                result.rows.length === 0
+            ) {
+                return res.status(404).json({
+                    success: false,
+                    error:
+                        "Advertisement not found."
+                });
+            }
 
             return res.json({
                 success: true
@@ -1629,7 +1831,7 @@ app.delete(
         } catch (error) {
             console.error(
                 "Delete advert error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1728,7 +1930,7 @@ app.post(
         } catch (error) {
             console.error(
                 "WhatsApp settings error:",
-                error
+                error.message
             );
 
             return res.status(500).json({
@@ -1741,34 +1943,21 @@ app.post(
 );
 
 /* ============================================================
-   HEALTH CHECK
+   API 404 HANDLER
+   IMPORTANT:
+   This comes BEFORE the frontend fallback.
 ============================================================ */
 
-app.get(
-    "/api/health",
-    async (req, res) => {
-        try {
-            await pool.query(
-                "SELECT 1"
-            );
-
-            return res.json({
-                success: true,
-                database: "connected",
-                service:
-                    "ProPulse Sports Portal"
-            });
-        } catch (error) {
-            console.error(
-                "Health check database error:",
-                error
-            );
-
-            return res.status(503).json({
-                success: false,
-                database: "unavailable"
-            });
-        }
+app.use(
+    "/api",
+    (req, res) => {
+        return res.status(404).json({
+            success: false,
+            error:
+                "API endpoint not found.",
+            path:
+                req.originalUrl
+        });
     }
 );
 
@@ -1778,29 +1967,63 @@ app.get(
 
 app.use(
     express.static(
-        path.join(__dirname)
+        path.join(__dirname),
+        {
+            index: "index.html"
+        }
     )
 );
 
 /* ============================================================
-   FALLBACK FOR FRONTEND
+   FRONTEND FALLBACK
+   Express 4 + Express 5 compatible.
+
+   Do NOT use app.get("*") here.
 ============================================================ */
 
-app.get(
-    "*",
+app.use(
     (req, res, next) => {
+        if (
+            req.method !== "GET" &&
+            req.method !== "HEAD"
+        ) {
+            return next();
+        }
+
         if (
             req.path.startsWith("/api/")
         ) {
             return next();
         }
 
-        res.sendFile(
+        const indexPath =
             path.join(
                 __dirname,
                 "index.html"
-            )
+            );
+
+        return res.sendFile(
+            indexPath,
+            error => {
+                if (error) {
+                    return next(error);
+                }
+            }
         );
+    }
+);
+
+/* ============================================================
+   404 HANDLER
+============================================================ */
+
+app.use(
+    (req, res) => {
+        return res.status(404).json({
+            success: false,
+            error:
+                "Resource not found."
+        });
     }
 );
 
@@ -1822,7 +2045,10 @@ app.use(
         return res.status(500).json({
             success: false,
             error:
-                "Internal server error."
+                NODE_ENV === "production"
+                    ? "Internal server error."
+                    : err.message ||
+                      "Internal server error."
         });
     }
 );
@@ -1832,25 +2058,131 @@ app.use(
 ============================================================ */
 
 async function startServer() {
-    try {
-        await initDB();
+    /*
+     * IMPORTANT:
+     *
+     * Start Express FIRST.
+     *
+     * Previously, initDB() ran before app.listen().
+     * If Supabase/PostgreSQL was unreachable, Render
+     * could never reach /api/health.
+     */
 
+    const server =
         app.listen(
             PORT,
             "0.0.0.0",
             () => {
                 console.log(
-                    `ProPulse Sports Portal running on port ${PORT}`
+                    "================================================"
+                );
+
+                console.log(
+                    "ProPulse Sports Portal"
+                );
+
+                console.log(
+                    `Server listening on port ${PORT}`
+                );
+
+                console.log(
+                    `Environment: ${NODE_ENV}`
+                );
+
+                console.log(
+                    `Health endpoint: /api/health`
+                );
+
+                console.log(
+                    "================================================"
                 );
             }
         );
+
+    /*
+     * Initialize the database after the HTTP server
+     * has started.
+     */
+    try {
+        await initDB();
+
+        console.log(
+            "ProPulse database initialization completed."
+        );
     } catch (error) {
+        /*
+         * Keep the HTTP server alive so /api/health can
+         * tell us that the database is unavailable.
+         */
         console.error(
-            "Server could not start because database initialization failed."
+            "WARNING: Database initialization failed."
         );
 
-        process.exit(1);
+        console.error(
+            "Database error:",
+            error.message
+        );
+
+        console.error(
+            "The HTTP server remains online."
+        );
+
+        console.error(
+            "Check DATABASE_URL and PostgreSQL/Supabase connectivity."
+        );
     }
+
+    /*
+     * Graceful shutdown.
+     */
+    const shutdown =
+        async signal => {
+            console.log(
+                `${signal} received. Shutting down gracefully...`
+            );
+
+            server.close(
+                async () => {
+                    try {
+                        await pool.end();
+
+                        console.log(
+                            "Database pool closed."
+                        );
+
+                        process.exit(0);
+                    } catch (error) {
+                        console.error(
+                            "Shutdown error:",
+                            error.message
+                        );
+
+                        process.exit(1);
+                    }
+                }
+            );
+
+            setTimeout(
+                () => {
+                    console.error(
+                        "Forced shutdown after timeout."
+                    );
+
+                    process.exit(1);
+                },
+                10000
+            ).unref();
+        };
+
+    process.once(
+        "SIGTERM",
+        () => shutdown("SIGTERM")
+    );
+
+    process.once(
+        "SIGINT",
+        () => shutdown("SIGINT")
+    );
 }
 
 startServer();
