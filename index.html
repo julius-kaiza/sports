@@ -149,7 +149,7 @@
                     <template x-if="!isLoggedIn">
                         <div class="space-y-4 text-center py-4">
                             <h2 class="text-xl font-black text-white">Studio Control Center</h2>
-                            <p class="text-xs text-slate-400 leading-relaxed">Accessible from any device (Phone, Tablet, PC).<br>Default SuperAdmin: <code class="text-amber-400 font-bold">SuperAdmin</code> / PIN: <code class="text-amber-400 font-bold">1234</code></p>
+                            <p class="text-xs text-slate-400 leading-relaxed">Accessible from any device (Phone, Tablet, PC).<br>Please enter your administrator credentials.</p>
                             <form @submit.prevent="login" class="space-y-3 text-left max-w-md mx-auto">
                                 <input type="text" x-model="loginForm.username" placeholder="Username" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition">
                                 <input type="password" x-model="loginForm.pin" placeholder="PIN Code / Password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition">
