@@ -1,324 +1,1473 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProPulse Sports Portal | Uganda & International Hub</title>
-    
-    <meta property="og:title" content="ProPulse Sports Portal | Live News & Updates">
-    <meta property="og:description" content="Catch the latest Ugandan and international sports news, live feeds, player profiles, and VIP tips in real-time.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop">
-    <meta property="og:url" content="">
-    <meta name="twitter:card" content="summary_large_image">
 
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="ProPulse Sports Portal — Ugandan and international sports news, player profiles, live updates and premium sports content."
+    >
+
+    <meta
+        name="theme-color"
+        content="#020617"
+    >
+
+    <title>ProPulse Sports Portal | Uganda & International Sports Hub</title>
+
+    <!-- Open Graph -->
+    <meta
+        property="og:title"
+        content="ProPulse Sports Portal | Live News & Updates"
+    >
+
+    <meta
+        property="og:description"
+        content="Catch the latest Ugandan and international sports news, player profiles, live feeds and premium sports content."
+    >
+
+    <meta
+        property="og:image"
+        content="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop"
+    >
+
+    <meta
+        property="og:url"
+        content=""
+    >
+
+    <meta
+        property="og:type"
+        content="website"
+    >
+
+    <meta
+        name="twitter:card"
+        content="summary_large_image"
+    >
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine -->
+    <script
+        defer
+        src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        ::selection {
+            background: #f59e0b;
+            color: #020617;
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 999px;
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 pb-32 font-sans antialiased selection:bg-amber-500 selection:text-slate-950" x-data="sportsPortal()">
 
-    <header class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 shadow-2xl">
-        <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col md:flex-row justify-between items-center gap-3">
-            <h1 class="text-2xl font-black text-amber-400 tracking-wider flex items-center gap-2">
-                <span>PRO</span><span class="text-white">PULSE</span>
-                <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold">LIVE HUB</span>
-            </h1>
-            
-            <nav class="flex flex-wrap justify-center gap-2 text-xs font-bold uppercase tracking-wide">
-                <button @click="activeTab = 'feed'" :class="activeTab === 'feed' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105' : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-700'" class="px-3.5 py-2 rounded-xl transition duration-200">🔥 Live Feed</button>
-                <button @click="activeTab = 'uganda'" :class="activeTab === 'uganda' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105' : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-700'" class="px-3.5 py-2 rounded-xl transition duration-200">🇺🇬 Ugandan Sports</button>
-                <button @click="activeTab = 'international'" :class="activeTab === 'international' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105' : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-700'" class="px-3.5 py-2 rounded-xl transition duration-200">🌍 International</button>
-                <button @click="activeTab = 'players'" :class="activeTab === 'players' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105' : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-700'" class="px-3.5 py-2 rounded-xl transition duration-200">⭐ Player Profiles</button>
-                <button @click="activeTab = 'tips'" :class="activeTab === 'tips' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105' : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-700'" class="px-3.5 py-2 rounded-xl transition duration-200">💎 VIP Tips</button>
-                <button @click="activeTab = 'admin'" :class="activeTab === 'admin' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105' : 'bg-slate-950 text-amber-400 border border-amber-800/60 hover:border-amber-700'" class="px-3.5 py-2 rounded-xl transition duration-200">⚙️ Admin / Studio</button>
-            </nav>
+<body
+    class="bg-slate-950 text-slate-100 pb-32 font-sans antialiased"
+    x-data="sportsPortal()"
+    x-init="init()"
+    x-cloak
+>
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header
+    class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 shadow-2xl"
+>
+    <div
+        class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col xl:flex-row justify-between items-center gap-4"
+    >
+
+        <!-- BRAND -->
+
+        <button
+            type="button"
+            @click="activeTab = 'feed'"
+            class="text-2xl font-black tracking-wider flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded-xl px-2 py-1"
+            aria-label="Go to ProPulse live feed"
+        >
+            <span class="text-amber-400">PRO</span>
+            <span class="text-white">PULSE</span>
+
+            <span
+                class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold"
+            >
+                LIVE HUB
+            </span>
+        </button>
+
+        <!-- NAVIGATION -->
+
+        <nav
+            class="flex flex-wrap justify-center gap-2 text-xs font-bold uppercase tracking-wide"
+            aria-label="Main navigation"
+        >
+
+            <template x-for="tab in navigationTabs" :key="tab.id">
+
+                <button
+                    type="button"
+                    @click="selectTab(tab.id)"
+                    :aria-current="activeTab === tab.id ? 'page' : null"
+                    :class="activeTab === tab.id
+                        ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105'
+                        : 'bg-slate-950 text-slate-300 border border-slate-800 hover:border-slate-700 hover:text-white'"
+                    class="px-3.5 py-2 rounded-xl transition duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    x-text="tab.label"
+                ></button>
+
+            </template>
+
+        </nav>
+    </div>
+</header>
+
+
+<!-- =========================================================
+     GLOBAL LOADING BAR
+========================================================= -->
+
+<div
+    x-show="loading"
+    x-transition
+    class="fixed top-0 left-0 right-0 h-1 bg-amber-500 z-[100]"
+>
+    <div class="h-full bg-white/50 animate-pulse"></div>
+</div>
+
+
+<!-- =========================================================
+     MAIN LAYOUT
+========================================================= -->
+
+<div
+    class="max-w-7xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6"
+>
+
+    <!-- =====================================================
+         LEFT SIDEBAR
+    ====================================================== -->
+
+    <aside class="space-y-4 order-2 lg:order-1">
+
+        <div class="lg:sticky lg:top-24 space-y-4">
+
+            <div
+                class="text-[10px] uppercase font-extrabold text-slate-500 tracking-widest text-center"
+            >
+                Sponsored Partners
+            </div>
+
+            <!-- EMPTY ADS -->
+
+            <template x-if="!data.adverts.length">
+
+                <div
+                    class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 text-center"
+                >
+                    <div class="text-2xl mb-2">📢</div>
+
+                    <p class="text-xs text-slate-500">
+                        Sponsored placements will appear here.
+                    </p>
+                </div>
+
+            </template>
+
+
+            <!-- ADS -->
+
+            <template
+                x-for="ad in data.adverts"
+                :key="'left-' + ad.id"
+            >
+
+                <div
+                    class="bg-gradient-to-b from-slate-900 to-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-3 shadow-xl relative group overflow-hidden"
+                >
+
+                    <div
+                        class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition"
+                    ></div>
+
+                    <div
+                        class="flex justify-between items-center text-[10px] font-bold text-amber-400 uppercase tracking-wider relative z-10"
+                    >
+                        <span x-text="ad.title"></span>
+
+                        <span
+                            class="bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/40 text-amber-300"
+                        >
+                            Ad
+                        </span>
+                    </div>
+
+                    <!-- MEDIA -->
+
+                    <template x-if="hasMedia(ad.media_url)">
+
+                        <div
+                            class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 relative z-10 shadow-inner"
+                        >
+
+                            <template x-if="isVideo(ad.media_url)">
+
+                                <video
+                                    :src="safeUrl(ad.media_url)"
+                                    autoplay
+                                    muted
+                                    loop
+                                    playsinline
+                                    preload="metadata"
+                                    class="w-full h-40 object-cover"
+                                ></video>
+
+                            </template>
+
+                            <template x-if="!isVideo(ad.media_url)">
+
+                                <img
+                                    :src="safeUrl(ad.media_url)"
+                                    :alt="ad.title || 'Advertisement'"
+                                    loading="lazy"
+                                    class="w-full h-40 object-cover group-hover:scale-105 transition duration-500"
+                                >
+
+                            </template>
+
+                        </div>
+
+                    </template>
+
+                    <p
+                        class="text-xs text-slate-300 leading-relaxed relative z-10"
+                        x-text="ad.body || ''"
+                    ></p>
+
+                    <template
+                        x-if="isValidHttpUrl(ad.target_url)"
+                    >
+
+                        <a
+                            :href="safeUrl(ad.target_url)"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="block text-center bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-xl transition duration-200 shadow-md relative z-10"
+                        >
+                            Visit Sponsor ➔
+                        </a>
+
+                    </template>
+
+                    <template
+                        x-if="isLoggedIn && userRole === 'admin'"
+                    >
+
+                        <button
+                            type="button"
+                            @click="deleteAdvert(ad.id)"
+                            class="w-full bg-red-950/80 hover:bg-red-900 text-red-400 text-[10px] font-bold py-1.5 rounded-lg border border-red-800/40 mt-2 transition"
+                        >
+                            Remove Ad
+                        </button>
+
+                    </template>
+
+                </div>
+
+            </template>
+
         </div>
-    </header>
 
-    <div class="max-w-7xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    </aside>
 
-        <aside class="space-y-4 order-2 lg:order-1">
-            <div class="lg:sticky lg:top-24 space-y-4">
-                <div class="text-[10px] uppercase font-extrabold text-slate-500 tracking-widest text-center">Sponsored Partners</div>
-                <template x-for="ad in data.adverts" :key="'left-' + ad.id">
-                    <div class="bg-gradient-to-b from-slate-900 to-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-3 shadow-xl relative group overflow-hidden">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition"></div>
-                        <div class="flex justify-between items-center text-[10px] font-bold text-amber-400 uppercase tracking-wider relative z-10">
-                            <span x-text="ad.title"></span>
-                            <span class="bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/40 text-amber-300">Ad</span>
-                        </div>
-                        <template x-if="ad.media_url">
-                            <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 relative z-10 shadow-inner">
-                                <template x-if="ad.media_url.endsWith('.mp4') || ad.media_url.includes('video')">
-                                    <video :src="ad.media_url" autoplay muted loop playsinline class="w-full h-40 object-cover"></video>
-                                </template>
-                                <template x-if="!ad.media_url.endsWith('.mp4') && !ad.media_url.includes('video')">
-                                    <img :src="ad.media_url" :alt="ad.title" loading="lazy" class="w-full h-40 object-cover group-hover:scale-105 transition duration-500">
-                                </template>
-                            </div>
-                        </template>
-                        <p class="text-xs text-slate-300 leading-relaxed relative z-10" x-text="ad.body"></p>
-                        <template x-if="ad.target_url && ad.target_url.trim() !== ''">
-                            <a :href="ad.target_url" target="_blank" class="block text-center bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-xl transition duration-200 shadow-md relative z-10">Visit Sponsor ➔</a>
-                        </template>
-                        <template x-if="userRole === 'admin' && isLoggedIn">
-                            <button @click="deleteAdvert(ad.id)" class="w-full bg-red-950/80 hover:bg-red-900 text-red-400 text-[10px] font-bold py-1.5 rounded-lg border border-red-800/40 mt-2 transition">Remove Ad</button>
-                        </template>
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main
+        class="lg:col-span-2 space-y-6 order-1 lg:order-2"
+    >
+
+        <!-- =================================================
+             CONTENT FEED
+        ================================================== -->
+
+        <section
+            x-show="activeTab !== 'tips' && activeTab !== 'admin'"
+            x-transition
+            class="space-y-6"
+        >
+
+            <!-- EMPTY STATE -->
+
+            <template x-if="!filteredPosts.length && !loading">
+
+                <div
+                    class="bg-slate-900/90 border border-slate-800 rounded-3xl p-10 text-center shadow-xl"
+                >
+
+                    <div class="text-5xl mb-4">🏟️</div>
+
+                    <h2
+                        class="text-xl font-black text-white"
+                    >
+                        No stories available
+                    </h2>
+
+                    <p
+                        class="text-sm text-slate-500 mt-2"
+                    >
+                        New sports stories and updates will appear here.
+                    </p>
+
+                </div>
+
+            </template>
+
+
+            <!-- POSTS -->
+
+            <template
+                x-for="item in filteredPosts"
+                :key="item.id"
+            >
+
+                <article
+                    class="bg-slate-900/90 backdrop-blur border border-slate-800/80 p-6 rounded-3xl space-y-4 shadow-2xl relative group hover:border-slate-700 transition duration-300"
+                >
+
+                    <!-- POST HEADER -->
+
+                    <div class="flex justify-between items-center text-xs gap-3">
+
+                        <span
+                            class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-black uppercase tracking-wider text-[10px]"
+                            x-text="formatPostType(item.type)"
+                        ></span>
+
+                        <span
+                            class="text-emerald-400 font-bold flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-800/30 px-2.5 py-1 rounded-full text-[11px]"
+                        >
+
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                            ></span>
+
+                            <span
+                                x-text="'By ' + (item.author || 'ProPulse')"
+                            ></span>
+
+                        </span>
+
                     </div>
-                </template>
-            </div>
-        </aside>
 
-        <main class="lg:col-span-2 space-y-6 order-1 lg:order-2">
 
-            <div class="space-y-6" x-show="activeTab !== 'tips' && activeTab !== 'admin'">
-                <template x-for="item in filteredPosts" :key="item.id">
-                    <article class="bg-slate-900/90 backdrop-blur border border-slate-800/80 p-6 rounded-3xl space-y-4 shadow-2xl relative group hover:border-slate-700 transition duration-300">
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-black uppercase tracking-wider text-[10px]" x-text="item.type"></span>
-                            <span class="text-emerald-400 font-bold flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-800/30 px-2.5 py-1 rounded-full text-[11px]">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                <span x-text="'By ' + item.author"></span>
-                            </span>
+                    <!-- TITLE -->
+
+                    <h2
+                        class="text-xl md:text-2xl font-black text-white tracking-tight leading-snug group-hover:text-amber-300 transition"
+                        x-text="item.title"
+                    ></h2>
+
+
+                    <!-- MEDIA -->
+
+                    <template
+                        x-if="item.media_url && item.type !== 'news-link'"
+                    >
+
+                        <div
+                            class="overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950 shadow-inner"
+                        >
+
+                            <template x-if="isVideo(item.media_url)">
+
+                                <video
+                                    :src="safeUrl(item.media_url)"
+                                    controls
+                                    playsinline
+                                    preload="metadata"
+                                    class="w-full max-h-[480px] object-cover"
+                                ></video>
+
+                            </template>
+
+                            <template x-if="!isVideo(item.media_url)">
+
+                                <img
+                                    :src="safeUrl(item.media_url)"
+                                    :alt="item.title || 'Sports story image'"
+                                    loading="lazy"
+                                    class="w-full max-h-[480px] object-cover group-hover:scale-[1.02] transition duration-700"
+                                >
+
+                            </template>
+
                         </div>
 
-                        <h2 class="text-xl md:text-2xl font-black text-white tracking-tight leading-snug group-hover:text-amber-300 transition" x-text="item.title"></h2>
+                    </template>
 
-                        <div x-show="item.media_url && item.type !== 'news-link'" class="overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950 shadow-inner">
-                            <template x-if="item.media_url && (item.media_url.endsWith('.mp4') || item.media_url.includes('video') || item.media_url.includes('giphy'))">
-                                <video :src="item.media_url" autoplay muted loop playsinline class="w-full max-h-[480px] object-cover"></video>
-                            </template>
-                            <template x-if="item.media_url && !(item.media_url.endsWith('.mp4') || item.media_url.includes('video') || item.media_url.includes('giphy'))">
-                                <img :src="item.media_url" :alt="item.title" loading="lazy" class="w-full max-h-[480px] object-cover group-hover:scale-[1.02] transition duration-700">
-                            </template>
-                        </div>
 
-                        <template x-if="item.type === 'news-link'">
-                            <div class="bg-slate-950/90 border border-slate-800 p-5 rounded-2xl space-y-3 shadow-inner">
-                                <div class="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
-                                    <span>🌐 External Newspaper Article Preview</span>
-                                </div>
-                                <h3 class="text-base font-bold text-white" x-text="item.title"></h3>
-                                <p class="text-xs text-slate-300 line-clamp-3 leading-relaxed" x-text="item.body"></p>
-                                <a :href="item.media_url" target="_blank" class="inline-block bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2.5 rounded-xl transition duration-200 shadow-md">Read Full Story on Source Site ➔</a>
+                    <!-- EXTERNAL NEWS -->
+
+                    <template x-if="item.type === 'news-link'">
+
+                        <div
+                            class="bg-slate-950/90 border border-slate-800 p-5 rounded-2xl space-y-3 shadow-inner"
+                        >
+
+                            <div
+                                class="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider"
+                            >
+                                <span>🌐 External Newspaper Article</span>
                             </div>
-                        </template>
 
-                        <p class="text-sm text-slate-300 whitespace-pre-line leading-relaxed font-normal" x-text="item.body" x-show="item.type !== 'news-link'"></p>
-                        
-                        <div class="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                            <div class="flex items-center gap-2">
-                                <a :href="'https://api.whatsapp.com/send?text=' + encodeURIComponent('🔥 *' + item.title + '*\n\nRead more on ProPulse Sports Portal: ' + window.location.href)" 
-                                   target="_blank" 
-                                   class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-slate-950 font-bold px-3 py-2 rounded-xl border border-emerald-500/30 flex items-center gap-1.5 transition duration-200 shadow-sm">
-                                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-                                    <span>WhatsApp</span>
+                            <h3
+                                class="text-base font-bold text-white"
+                                x-text="item.title"
+                            ></h3>
+
+                            <p
+                                class="text-xs text-slate-300 line-clamp-3 leading-relaxed"
+                                x-text="item.body"
+                            ></p>
+
+                            <template
+                                x-if="isValidHttpUrl(item.media_url)"
+                            >
+
+                                <a
+                                    :href="safeUrl(item.media_url)"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-block bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2.5 rounded-xl transition duration-200 shadow-md"
+                                >
+                                    Read Full Story on Source Site ➔
                                 </a>
-                                <button @click="shareStory(item)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1.5 transition duration-200">
-                                    <span>🔗 Share on Site</span>
+
+                            </template>
+
+                        </div>
+
+                    </template>
+
+
+                    <!-- BODY -->
+
+                    <p
+                        x-show="item.type !== 'news-link'"
+                        class="text-sm text-slate-300 whitespace-pre-line leading-relaxed font-normal"
+                        x-text="item.body"
+                    ></p>
+
+
+                    <!-- POST FOOTER -->
+
+                    <div
+                        class="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs"
+                    >
+
+                        <div class="flex items-center gap-2">
+
+                            <!-- WHATSAPP -->
+
+                            <a
+                                :href="storyWhatsAppUrl(item)"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-slate-950 font-bold px-3 py-2 rounded-xl border border-emerald-500/30 flex items-center gap-1.5 transition duration-200 shadow-sm"
+                            >
+                                <span>💬</span>
+                                <span>WhatsApp</span>
+                            </a>
+
+
+                            <!-- SHARE -->
+
+                            <button
+                                type="button"
+                                @click="shareStory(item)"
+                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-1.5 transition duration-200"
+                            >
+                                <span>🔗</span>
+                                <span>Share</span>
+                            </button>
+
+                        </div>
+
+
+                        <!-- MANAGEMENT -->
+
+                        <template
+                            x-if="isLoggedIn && (userRole === 'admin' || currentUsername === item.author)"
+                        >
+
+                            <div class="flex gap-2">
+
+                                <template x-if="userRole === 'admin'">
+
+                                    <button
+                                        type="button"
+                                        @click="editPost(item)"
+                                        class="bg-amber-950/80 hover:bg-amber-900 text-amber-400 text-xs px-3 py-1.5 rounded-lg border border-amber-800/40 font-bold transition"
+                                    >
+                                        Edit
+                                    </button>
+
+                                </template>
+
+                                <button
+                                    type="button"
+                                    @click="deletePost(item.id)"
+                                    class="bg-red-950/80 hover:bg-red-900 text-red-400 text-xs px-3 py-1.5 rounded-lg border border-red-800/40 font-bold transition"
+                                >
+                                    Delete
                                 </button>
+
                             </div>
 
-                            <template x-if="isLoggedIn && (userRole === 'admin' || currentUsername === item.author)">
-                                <div class="flex gap-2">
-                                    <template x-if="userRole === 'admin'">
-                                        <button @click="editPost(item)" class="bg-amber-950/80 hover:bg-amber-900 text-amber-400 text-xs px-3 py-1.5 rounded-lg border border-amber-800/40 font-bold transition">Edit</button>
-                                    </template>
-                                    <button @click="deletePost(item.id)" class="bg-red-950/80 hover:bg-red-900 text-red-400 text-xs px-3 py-1.5 rounded-lg border border-red-800/40 font-bold transition">Delete</button>
-                                </div>
-                            </template>
-                        </div>
-                    </article>
-                </template>
-            </div>
-
-            <div x-show="activeTab === 'tips'" class="space-y-6">
-                <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-amber-500/40 p-8 rounded-3xl text-center space-y-4 shadow-2xl relative overflow-hidden">
-                    <div class="absolute -top-12 -right-12 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl"></div>
-                    <span class="text-xs bg-amber-950 text-amber-400 border border-amber-800/40 px-3 py-1 rounded-full font-extrabold uppercase tracking-widest">VIP Accumulator Hub</span>
-                    <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight">Unlock High-Odds Winning Slips</h2>
-                    <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">Instant secure access via Google Pay payment gateway integration with verified high-success rates.</p>
-                    <button @click="triggerGooglePay" class="bg-white hover:bg-slate-200 text-slate-950 font-black px-8 py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 mx-auto transition duration-200 shadow-xl scale-100 hover:scale-105">
-                        <span>Pay Securely with 🌐 Google Pay</span>
-                    </button>
-                </div>
-            </div>
-
-            <section x-show="activeTab === 'admin'" class="space-y-6">
-                <div class="bg-slate-900 border border-amber-500/40 p-6 rounded-3xl shadow-xl space-y-6">
-                    
-                    <template x-if="!isLoggedIn">
-                        <div class="space-y-4 text-center py-4">
-                            <h2 class="text-xl font-black text-white">Studio Control Center</h2>
-                            <p class="text-xs text-slate-400 leading-relaxed">Accessible from any device (Phone, Tablet, PC).<br>Please enter your administrator credentials.</p>
-                            <form @submit.prevent="login" class="space-y-3 text-left max-w-md mx-auto">
-                                <input type="text" x-model="loginForm.username" placeholder="Username" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition">
-                                <input type="password" x-model="loginForm.pin" placeholder="PIN Code / Password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition">
-                                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3.5 rounded-xl text-xs transition shadow-lg">Authenticate Access</button>
-                            </form>
-                        </div>
-                    </template>
-
-                    <template x-if="isLoggedIn">
-                        <div class="space-y-6">
-                            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-                                <div>
-                                    <span class="text-[10px] bg-amber-950 text-amber-400 border border-amber-800/40 px-2.5 py-1 rounded font-black uppercase tracking-wider" x-text="userRole"></span>
-                                    <h2 class="text-lg font-black text-white mt-1" x-text="'Welcome, ' + currentUsername"></h2>
-                                </div>
-                                <button @click="logout" class="bg-red-950 hover:bg-red-900 text-red-400 text-xs px-3.5 py-2 rounded-xl border border-red-800/40 font-bold transition">Sign Out</button>
-                            </div>
-
-                            <form @submit.prevent="publishContent" class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-inner">
-                                <h3 class="text-sm font-bold text-white tracking-wide" x-text="postPayload.id ? 'Edit Story / Video' : 'Publish Story, Video, or Newspaper Link'"></h3>
-                                
-                                <div>
-                                    <label class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider">Select Category</label>
-                                    <select x-model="postType" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-amber-500 transition">
-                                        <option value="uganda">🇺🇬 Ugandan Sports News</option>
-                                        <option value="international">🌍 International Sports News</option>
-                                        <option value="players">⭐ Player Profile Story</option>
-                                        <option value="tips">💎 VIP Betting Tip</option>
-                                        <option value="news-link">🔗 Newspaper / External News Link (Auto Reader)</option>
-                                    </select>
-                                </div>
-
-                                <input type="text" x-model="postPayload.title" placeholder="Story Headline Title" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition">
-                                <input type="url" x-model="postPayload.media_url" placeholder="Media URL (.mp4 video, image, GIF, or newspaper link)" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition">
-                                
-                                <div>
-                                    <label class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider">Story Body Commentary</label>
-                                    <textarea x-model="postPayload.body" rows="4" placeholder="Type or paste the complete body of the story here..." required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition"></textarea>
-                                </div>
-
-                                <div class="flex gap-2">
-                                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3.5 rounded-xl text-xs transition duration-200 shadow-lg" x-text="postPayload.id ? '💾 Save Changes' : '🚀 Publish Live to Portal'"></button>
-                                    <template x-if="postPayload.id">
-                                        <button type="button" @click="resetPostForm" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-3.5 rounded-xl text-xs transition">Cancel</button>
-                                    </template>
-                                </div>
-                            </form>
-
-                            <template x-if="userRole === 'admin'">
-                                <div class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-emerald-500/30">
-                                    <h3 class="text-sm font-bold text-emerald-400">📱 WhatsApp Integration Settings</h3>
-                                    <form @submit.prevent="updateWhatsAppSettings" class="space-y-3">
-                                        <div>
-                                            <label class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider">WhatsApp Phone Number (with Country Code)</label>
-                                            <input type="text" x-model="whatsappSettings.phone" placeholder="e.g. 256700000000" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-emerald-500 transition">
-                                        </div>
-                                        <div>
-                                            <label class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider">Default Live Chat Message</label>
-                                            <input type="text" x-model="whatsappSettings.message" placeholder="e.g. Hello ProPulse Sports, I am reaching out from your live portal!" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-emerald-500 transition">
-                                        </div>
-                                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md">Save WhatsApp Settings</button>
-                                    </form>
-                                </div>
-                            </template>
-
-                            <template x-if="userRole === 'admin'">
-                                <div class="space-y-6">
-                                    <div class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-indigo-500/30">
-                                        <h3 class="text-sm font-bold text-indigo-400">Manage Content Bloggers (No Admin Rights)</h3>
-                                        <form @submit.prevent="createBlogger" class="space-y-3">
-                                            <input type="text" x-model="bloggerForm.username" placeholder="New Blogger Username" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-indigo-500 transition">
-                                            <input type="password" x-model="bloggerForm.pin" placeholder="Blogger Security PIN / Password" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-indigo-500 transition">
-                                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md">Register New Blogger Account</button>
-                                        </form>
-
-                                        <div class="mt-4 space-y-2">
-                                            <div class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">Active Bloggers List</div>
-                                            <template x-for="b in data.users" :key="b.id">
-                                                <div class="flex justify-between items-center bg-slate-900 border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs">
-                                                    <div>
-                                                        <span class="text-slate-200 font-bold" x-text="b.username"></span>
-                                                        <span class="text-[10px] text-slate-500 ml-2 uppercase font-semibold" x-text="'(' + b.role + ')'"></span>
-                                                    </div>
-                                                    <template x-if="b.role === 'blogger'">
-                                                        <button @click="deleteBlogger(b.id)" class="text-red-400 hover:text-red-300 font-bold text-[10px] transition">Revoke Account</button>
-                                                    </template>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-amber-500/30">
-                                        <h3 class="text-sm font-bold text-amber-400">🔐 Password Management Suite</h3>
-                                        <form @submit.prevent="updatePassword" class="space-y-3">
-                                            <div>
-                                                <label class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider">Select User Account</label>
-                                                <select x-model="passwordForm.username" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-amber-500 transition">
-                                                    <option value="SuperAdmin">SuperAdmin (Master)</option>
-                                                    <template x-for="b in data.users.filter(u => u.role === 'blogger')" :key="b.username">
-                                                        <option :value="b.username" x-text="b.username + ' (Blogger)'"></option>
-                                                    </template>
-                                                </select>
-                                            </div>
-                                            <input type="password" x-model="passwordForm.new_pin" placeholder="New Password / PIN" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition">
-                                            <input type="password" x-model="passwordForm.confirm_pin" placeholder="Confirm New Password / PIN" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition">
-                                            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md">Update Account Password</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </template>
-
-                            <template x-if="userRole === 'admin'">
-                                <form @submit.prevent="deployAdvert" class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-amber-500/30">
-                                    <h3 class="text-sm font-bold text-amber-400">Deploy Permanent Side Advert</h3>
-                                    <input type="text" x-model="adPayload.title" placeholder="Sponsor Brand Name" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition">
-                                    <input type="url" x-model="adPayload.media_url" placeholder="Optional Ad Media URL (.mp4 video, image, or GIF)" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition">
-                                    <textarea x-model="adPayload.body" rows="3" placeholder="Sponsor text commentary or promotion details..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition"></textarea>
-                                    <input type="url" x-model="adPayload.target_url" placeholder="Destination Landing Link URL (Optional)" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition">
-                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md">Pin Universal Side Ad</button>
-                                </form>
-                            </template>
-                        </div>
-                    </template>
-                </div>
-            </section>
-        </main>
-
-        <aside class="space-y-4 order-3">
-            <div class="lg:sticky lg:top-24 space-y-4">
-                <div class="text-[10px] uppercase font-extrabold text-slate-500 tracking-widest text-center">Featured Promotions</div>
-                <template x-for="ad in data.adverts" :key="'right-' + ad.id">
-                    <div class="bg-gradient-to-b from-slate-900 to-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-3 shadow-xl relative group overflow-hidden">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition"></div>
-                        <div class="flex justify-between items-center text-[10px] font-bold text-amber-400 uppercase tracking-wider relative z-10">
-                            <span x-text="ad.title"></span>
-                            <span class="bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/40 text-amber-300">Ad</span>
-                        </div>
-                        <template x-if="ad.media_url">
-                            <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 relative z-10 shadow-inner">
-                                <template x-if="ad.media_url.endsWith('.mp4') || ad.media_url.includes('video')">
-                                    <video :src="ad.media_url" autoplay muted loop playsinline class="w-full h-40 object-cover"></video>
-                                </template>
-                                <template x-if="!ad.media_url.endsWith('.mp4') && !ad.media_url.includes('video')">
-                                    <img :src="ad.media_url" :alt="ad.title" loading="lazy" class="w-full h-40 object-cover group-hover:scale-105 transition duration-500">
-                                </template>
-                            </div>
                         </template>
-                        <p class="text-xs text-slate-300 leading-relaxed relative z-10" x-text="ad.body"></p>
-                        <template x-if="ad.target_url && ad.target_url.trim() !== ''">
-                            <a :href="ad.target_url" target="_blank" class="block text-center bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-xl transition duration-200 shadow-md relative z-10">Visit Sponsor ➔</a>
-                        </template>
-                        <template x-if="userRole === 'admin' && isLoggedIn">
-                            <button @click="deleteAdvert(ad.id)" class="w-full bg-red-950/80 hover:bg-red-900 text-red-400 text-[10px] font-bold py-1.5 rounded-lg border border-red-800/40 mt-2 transition">Remove Ad</button>
-                        </template>
+
                     </div>
-                </template>
+
+                </article>
+
+            </template>
+
+        </section>
+
+
+        <!-- =================================================
+             VIP TIPS
+        ================================================== -->
+
+        <section
+            x-show="activeTab === 'tips'"
+            x-transition
+            class="space-y-6"
+        >
+
+            <div
+                class="bg-gradient-to-br from-slate-900 to-slate-950 border border-amber-500/40 p-8 rounded-3xl text-center space-y-4 shadow-2xl relative overflow-hidden"
+            >
+
+                <div
+                    class="absolute -top-12 -right-12 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl"
+                ></div>
+
+                <span
+                    class="text-xs bg-amber-950 text-amber-400 border border-amber-800/40 px-3 py-1 rounded-full font-extrabold uppercase tracking-widest"
+                >
+                    VIP Accumulator Hub
+                </span>
+
+                <h2
+                    class="text-2xl md:text-3xl font-black text-white tracking-tight"
+                >
+                    Unlock Premium Sports Content
+                </h2>
+
+                <p
+                    class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed"
+                >
+                    Secure payment access can be connected to your production
+                    Google Pay payment processor.
+                </p>
+
+                <button
+                    type="button"
+                    @click="triggerGooglePay"
+                    class="bg-white hover:bg-slate-200 text-slate-950 font-black px-8 py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 mx-auto transition duration-200 shadow-xl hover:scale-105"
+                >
+                    <span>🌐 Pay Securely with Google Pay</span>
+                </button>
+
             </div>
-        </aside>
+
+        </section>
+
+
+        <!-- =================================================
+             ADMIN STUDIO
+        ================================================== -->
+
+        <section
+            x-show="activeTab === 'admin'"
+            x-transition
+            class="space-y-6"
+        >
+
+            <div
+                class="bg-slate-900 border border-amber-500/40 p-6 rounded-3xl shadow-xl space-y-6"
+            >
+
+                <!-- LOGIN -->
+
+                <template x-if="!isLoggedIn">
+
+                    <div class="space-y-4 text-center py-4">
+
+                        <h2
+                            class="text-xl font-black text-white"
+                        >
+                            Studio Control Center
+                        </h2>
+
+                        <p
+                            class="text-xs text-slate-400 leading-relaxed"
+                        >
+                            Accessible from phone, tablet and PC.
+                            <br>
+                            Please enter your administrator or blogger credentials.
+                        </p>
+
+                        <form
+                            @submit.prevent="login"
+                            class="space-y-3 text-left max-w-md mx-auto"
+                        >
+
+                            <label
+                                class="block text-[10px] text-slate-400 font-bold uppercase"
+                            >
+                                Username
+                            </label>
+
+                            <input
+                                type="text"
+                                x-model.trim="loginForm.username"
+                                placeholder="Username"
+                                autocomplete="username"
+                                required
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition"
+                            >
+
+                            <label
+                                class="block text-[10px] text-slate-400 font-bold uppercase"
+                            >
+                                Password / PIN
+                            </label>
+
+                            <input
+                                type="password"
+                                x-model="loginForm.pin"
+                                placeholder="PIN Code / Password"
+                                autocomplete="current-password"
+                                required
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition"
+                            >
+
+                            <button
+                                type="submit"
+                                :disabled="loading"
+                                class="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black py-3.5 rounded-xl text-xs transition shadow-lg"
+                            >
+                                <span
+                                    x-text="loading ? 'Authenticating...' : 'Authenticate Access'"
+                                ></span>
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </template>
+
+
+                <!-- LOGGED IN -->
+
+                <template x-if="isLoggedIn">
+
+                    <div class="space-y-6">
+
+                        <!-- SESSION HEADER -->
+
+                        <div
+                            class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-800 pb-4"
+                        >
+
+                            <div>
+
+                                <span
+                                    class="text-[10px] bg-amber-950 text-amber-400 border border-amber-800/40 px-2.5 py-1 rounded font-black uppercase tracking-wider"
+                                    x-text="userRole"
+                                ></span>
+
+                                <h2
+                                    class="text-lg font-black text-white mt-2"
+                                    x-text="'Welcome, ' + currentUsername"
+                                ></h2>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                @click="logout"
+                                class="bg-red-950 hover:bg-red-900 text-red-400 text-xs px-3.5 py-2 rounded-xl border border-red-800/40 font-bold transition"
+                            >
+                                Sign Out
+                            </button>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             CONTENT PUBLISHER
+                        ================================================== -->
+
+                        <form
+                            @submit.prevent="publishContent"
+                            class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-inner"
+                        >
+
+                            <div
+                                class="flex justify-between items-center gap-3"
+                            >
+
+                                <h3
+                                    class="text-sm font-bold text-white tracking-wide"
+                                    x-text="postPayload.id ? 'Edit Story / Video' : 'Publish Story, Video, or Newspaper Link'"
+                                ></h3>
+
+                                <template x-if="postPayload.id">
+
+                                    <span
+                                        class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-1 rounded-lg"
+                                    >
+                                        EDIT MODE
+                                    </span>
+
+                                </template>
+
+                            </div>
+
+
+                            <!-- CATEGORY -->
+
+                            <div>
+
+                                <label
+                                    class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider"
+                                >
+                                    Select Category
+                                </label>
+
+                                <select
+                                    x-model="postType"
+                                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-amber-500 transition"
+                                >
+
+                                    <option value="uganda">
+                                        🇺🇬 Ugandan Sports News
+                                    </option>
+
+                                    <option value="international">
+                                        🌍 International Sports News
+                                    </option>
+
+                                    <option value="players">
+                                        ⭐ Player Profile Story
+                                    </option>
+
+                                    <option value="tips">
+                                        💎 VIP Sports Content
+                                    </option>
+
+                                    <option value="news-link">
+                                        🔗 Newspaper / External News Link
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- TITLE -->
+
+                            <input
+                                type="text"
+                                x-model.trim="postPayload.title"
+                                placeholder="Story Headline Title"
+                                required
+                                maxlength="500"
+                                class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition"
+                            >
+
+
+                            <!-- MEDIA -->
+
+                            <div>
+
+                                <label
+                                    class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider"
+                                >
+                                    Media / Source URL
+                                </label>
+
+                                <input
+                                    type="url"
+                                    x-model.trim="postPayload.media_url"
+                                    placeholder="Image, GIF, MP4 or newspaper URL"
+                                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition"
+                                >
+
+                            </div>
+
+
+                            <!-- BODY -->
+
+                            <div>
+
+                                <label
+                                    class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider"
+                                >
+                                    Story Body Commentary
+                                </label>
+
+                                <textarea
+                                    x-model="postPayload.body"
+                                    rows="6"
+                                    placeholder="Type or paste the complete body of the story here..."
+                                    required
+                                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-xs text-white outline-none focus:border-amber-500 transition resize-y"
+                                ></textarea>
+
+                            </div>
+
+
+                            <!-- ACTIONS -->
+
+                            <div class="flex gap-2">
+
+                                <button
+                                    type="submit"
+                                    :disabled="loading"
+                                    class="flex-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black py-3.5 rounded-xl text-xs transition duration-200 shadow-lg"
+                                >
+
+                                    <span
+                                        x-text="loading
+                                            ? 'Saving...'
+                                            : (postPayload.id
+                                                ? '💾 Save Changes'
+                                                : '🚀 Publish Live to Portal')"
+                                    ></span>
+
+                                </button>
+
+                                <template x-if="postPayload.id">
+
+                                    <button
+                                        type="button"
+                                        @click="resetPostForm"
+                                        class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-3.5 rounded-xl text-xs transition"
+                                    >
+                                        Cancel
+                                    </button>
+
+                                </template>
+
+                            </div>
+
+                        </form>
+
+
+                        <!-- =================================================
+                             WHATSAPP SETTINGS
+                        ================================================== -->
+
+                        <template x-if="userRole === 'admin'">
+
+                            <div
+                                class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-emerald-500/30"
+                            >
+
+                                <h3
+                                    class="text-sm font-bold text-emerald-400"
+                                >
+                                    📱 WhatsApp Integration Settings
+                                </h3>
+
+                                <form
+                                    @submit.prevent="updateWhatsAppSettings"
+                                    class="space-y-3"
+                                >
+
+                                    <div>
+
+                                        <label
+                                            class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider"
+                                        >
+                                            WhatsApp Phone Number
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            x-model.trim="whatsappSettings.phone"
+                                            placeholder="256700000000"
+                                            required
+                                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-emerald-500 transition"
+                                        >
+
+                                    </div>
+
+                                    <div>
+
+                                        <label
+                                            class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider"
+                                        >
+                                            Default Live Chat Message
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            x-model.trim="whatsappSettings.message"
+                                            placeholder="Hello ProPulse Sports..."
+                                            required
+                                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-emerald-500 transition"
+                                        >
+
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        :disabled="loading"
+                                        class="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md"
+                                    >
+                                        Save WhatsApp Settings
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </template>
+
+
+                        <!-- =================================================
+                             ADMIN MANAGEMENT
+                        ================================================== -->
+
+                        <template x-if="userRole === 'admin'">
+
+                            <div class="space-y-6">
+
+                                <!-- BLOGGERS -->
+
+                                <div
+                                    class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-indigo-500/30"
+                                >
+
+                                    <h3
+                                        class="text-sm font-bold text-indigo-400"
+                                    >
+                                        👥 Manage Content Bloggers
+                                    </h3>
+
+                                    <p
+                                        class="text-[11px] text-slate-500"
+                                    >
+                                        Blogger accounts can publish and manage their own content but do not receive administrator privileges.
+                                    </p>
+
+                                    <form
+                                        @submit.prevent="createBlogger"
+                                        class="space-y-3"
+                                    >
+
+                                        <input
+                                            type="text"
+                                            x-model.trim="bloggerForm.username"
+                                            placeholder="New Blogger Username"
+                                            required
+                                            autocomplete="off"
+                                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-indigo-500 transition"
+                                        >
+
+                                        <input
+                                            type="password"
+                                            x-model="bloggerForm.pin"
+                                            placeholder="Blogger Security PIN / Password"
+                                            required
+                                            autocomplete="new-password"
+                                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-indigo-500 transition"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            :disabled="loading"
+                                            class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md"
+                                        >
+                                            Register New Blogger Account
+                                        </button>
+
+                                    </form>
+
+
+                                    <div class="mt-4 space-y-2">
+
+                                        <div
+                                            class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider"
+                                        >
+                                            Active Accounts
+                                        </div>
+
+                                        <template
+                                            x-if="!data.users.length"
+                                        >
+
+                                            <p
+                                                class="text-xs text-slate-500"
+                                            >
+                                                No user accounts returned by the server.
+                                            </p>
+
+                                        </template>
+
+                                        <template
+                                            x-for="b in data.users"
+                                            :key="b.id"
+                                        >
+
+                                            <div
+                                                class="flex justify-between items-center gap-3 bg-slate-900 border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs"
+                                            >
+
+                                                <div class="min-w-0">
+
+                                                    <span
+                                                        class="text-slate-200 font-bold break-all"
+                                                        x-text="b.username"
+                                                    ></span>
+
+                                                    <span
+                                                        class="text-[10px] text-slate-500 ml-2 uppercase font-semibold"
+                                                        x-text="'(' + b.role + ')'"
+                                                    ></span>
+
+                                                </div>
+
+                                                <template
+                                                    x-if="b.role === 'blogger'"
+                                                >
+
+                                                    <button
+                                                        type="button"
+                                                        @click="deleteBlogger(b.id)"
+                                                        class="text-red-400 hover:text-red-300 font-bold text-[10px] transition shrink-0"
+                                                    >
+                                                        Revoke
+                                                    </button>
+
+                                                </template>
+
+                                            </div>
+
+                                        </template>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- PASSWORD -->
+
+                                <div
+                                    class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-amber-500/30"
+                                >
+
+                                    <h3
+                                        class="text-sm font-bold text-amber-400"
+                                    >
+                                        🔐 Password Management
+                                    </h3>
+
+                                    <form
+                                        @submit.prevent="updatePassword"
+                                        class="space-y-3"
+                                    >
+
+                                        <div>
+
+                                            <label
+                                                class="text-[10px] text-slate-400 font-extrabold uppercase block mb-1 tracking-wider"
+                                            >
+                                                Select User Account
+                                            </label>
+
+                                            <select
+                                                x-model="passwordForm.username"
+                                                required
+                                                class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-amber-500 transition"
+                                            >
+
+                                                <option value="SuperAdmin">
+                                                    SuperAdmin (Master)
+                                                </option>
+
+                                                <template
+                                                    x-for="b in bloggerUsers"
+                                                    :key="b.username"
+                                                >
+
+                                                    <option
+                                                        :value="b.username"
+                                                        x-text="b.username + ' (Blogger)'"
+                                                    ></option>
+
+                                                </template>
+
+                                            </select>
+
+                                        </div>
+
+                                        <input
+                                            type="password"
+                                            x-model="passwordForm.new_pin"
+                                            placeholder="New Password / PIN"
+                                            required
+                                            autocomplete="new-password"
+                                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition"
+                                        >
+
+                                        <input
+                                            type="password"
+                                            x-model="passwordForm.confirm_pin"
+                                            placeholder="Confirm New Password / PIN"
+                                            required
+                                            autocomplete="new-password"
+                                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            :disabled="loading"
+                                            class="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md"
+                                        >
+                                            Update Account Password
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </template>
+
+
+                        <!-- =================================================
+                             ADVERTISEMENT MANAGEMENT
+                        ================================================== -->
+
+                        <template x-if="userRole === 'admin'">
+
+                            <form
+                                @submit.prevent="deployAdvert"
+                                class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-amber-500/30"
+                            >
+
+                                <h3
+                                    class="text-sm font-bold text-amber-400"
+                                >
+                                    📢 Deploy Permanent Side Advertisement
+                                </h3>
+
+                                <input
+                                    type="text"
+                                    x-model.trim="adPayload.title"
+                                    placeholder="Sponsor Brand Name"
+                                    required
+                                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition"
+                                >
+
+                                <input
+                                    type="url"
+                                    x-model.trim="adPayload.media_url"
+                                    placeholder="Optional Ad Media URL"
+                                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition"
+                                >
+
+                                <textarea
+                                    x-model="adPayload.body"
+                                    rows="3"
+                                    placeholder="Sponsor text commentary or promotion details..."
+                                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition resize-y"
+                                ></textarea>
+
+                                <input
+                                    type="url"
+                                    x-model.trim="adPayload.target_url"
+                                    placeholder="Destination Landing Link URL (Optional)"
+                                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500 transition"
+                                >
+
+                                <button
+                                    type="submit"
+                                    :disabled="loading"
+                                    class="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md"
+                                >
+                                    📌 Pin Universal Side Ad
+                                </button>
+
+                            </form>
+
+                        </template>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================================
+         RIGHT SIDEBAR
+    ====================================================== -->
+
+    <aside class="space-y-4 order-3">
+
+        <div class="lg:sticky lg:top-24 space-y-4">
+
+            <div
+                class="text-[10px] uppercase font-extrabold text-slate-500 tracking-widest text-center"
+            >
+                Featured Promotions
+            </div>
+
+            <template
+                x-for="ad in data.adverts"
+                :key="'right-' + ad.id"
+            >
+
+                <div
+                    class="bg-gradient-to-b from-slate-900 to-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-3 shadow-xl relative group overflow-hidden"
+                >
+
+                    <div
+                        class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition"
+                    ></div>
+
+                    <div
+                        class="flex justify-between items-center text-[10px] font-bold text-amber-400 uppercase tracking-wider relative z-10"
+                    >
+
+                        <span
+                            x-text="ad.title"
+                        ></span>
+
+                        <span
+                            class="bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/40 text-amber-300"
+                        >
+                            Ad
+                        </span>
+
+                    </div>
+
+
+                    <template x-if="hasMedia(ad.media_url)">
+
+                        <div
+                            class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 relative z-10 shadow-inner"
+                        >
+
+                            <template x-if="isVideo(ad.media_url)">
+
+                                <video
+                                    :src="safeUrl(ad.media_url)"
+                                    autoplay
+                                    muted
+                                    loop
+                                    playsinline
+                                    preload="metadata"
+                                    class="w-full h-40 object-cover"
+                                ></video>
+
+                            </template>
+
+                            <template x-if="!isVideo(ad.media_url)">
+
+                                <img
+                                    :src="safeUrl(ad.media_url)"
+                                    :alt="ad.title || 'Advertisement'"
+                                    loading="lazy"
+                                    class="w-full h-40 object-cover group-hover:scale-105 transition duration-500"
+                                >
+
+                            </template>
+
+                        </div>
+
+                    </template>
+
+
+                    <p
+                        class="text-xs text-slate-300 leading-relaxed relative z-10"
+                        x-text="ad.body || ''"
+                    ></p>
+
+
+                    <template
+                        x-if="isValidHttpUrl(ad.target_url)"
+                    >
+
+                        <a
+                            :href="safeUrl(ad.target_url)"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="block text-center bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-xl transition duration-200 shadow-md relative z-10"
+                        >
+                            Visit Sponsor ➔
+                        </a>
+
+                    </template>
+
+
+                    <template
+                        x-if="userRole === 'admin' && isLoggedIn"
+                    >
+
+                        <button
+                            type="button"
+                            @click="deleteAdvert(ad.id)"
+                            class="w-full bg-red-950/80 hover:bg-red-900 text-red-400 text-[10px] font-bold py-1.5 rounded-lg border border-red-800/40 mt-2 transition"
+                        >
+                            Remove Ad
+                        </button>
+
+                    </template>
+
+                </div>
+
+            </template>
+
+        </div>
+
+    </aside>
+
+</div>
+
+
+<!-- =========================================================
+     FLOATING WHATSAPP BUTTON
+========================================================= -->
+
+<template x-if="whatsappLinkAvailable">
+
+    <a
+        :href="whatsappChatUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Contact ProPulse Sports on WhatsApp"
+        title="Contact ProPulse Sports on WhatsApp"
+        class="fixed bottom-20 right-6 z-50 bg-emerald-500 hover:bg-emerald-400 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center transition duration-300 hover:scale-110 group"
+    >
+
+        <svg
+            class="w-7 h-7 fill-current"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path
+                d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"
+            />
+        </svg>
+
+    </a>
+
+</template>
+
+
+<!-- =========================================================
+     TOAST / STATUS MESSAGE
+========================================================= -->
+
+<div
+    x-show="toast.visible"
+    x-transition
+    class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] w-[calc(100%-2rem)] max-w-md"
+    role="status"
+    aria-live="polite"
+>
+
+    <div
+        :class="toast.type === 'error'
+            ? 'border-red-500/40 bg-red-950 text-red-200'
+            : 'border-emerald-500/40 bg-emerald-950 text-emerald-200'"
+        class="border rounded-2xl px-4 py-3 shadow-2xl flex items-center justify-between gap-3"
+    >
+
+        <span
+            class="text-xs font-semibold"
+            x-text="toast.message"
+        ></span>
+
+        <button
+            type="button"
+            @click="hideToast()"
+            class="text-xs opacity-70 hover:opacity-100"
+        >
+            ✕
+        </button>
 
     </div>
 
-    <a :href="'https://wa.me/' + whatsappSettings.phone + '?text=' + encodeURIComponent(whatsappSettings.message)" 
-       target="_blank" 
-       class="fixed bottom-20 right-6 z-50 bg-emerald-500 hover:bg-emerald-400 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center transition duration-300 hover:scale-110 group animate-bounce">
-        <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-    </a>
+</div>
 
-    <script>
-    function sportsPortal() {
+
+<script>
+/* =========================================================
+   PROPULSE SPORTS PORTAL
+   FRONTEND APPLICATION
+========================================================= */
+
+function sportsPortal() {
 
     return {
 
@@ -329,10 +1478,41 @@
         activeTab: 'feed',
 
         isLoggedIn: false,
+
         currentUsername: '',
+
         userRole: '',
 
+        loading: false,
+
         postType: 'uganda',
+
+        navigationTabs: [
+            {
+                id: 'feed',
+                label: '🔥 Live Feed'
+            },
+            {
+                id: 'uganda',
+                label: '🇺🇬 Ugandan Sports'
+            },
+            {
+                id: 'international',
+                label: '🌍 International'
+            },
+            {
+                id: 'players',
+                label: '⭐ Player Profiles'
+            },
+            {
+                id: 'tips',
+                label: '💎 VIP Tips'
+            },
+            {
+                id: 'admin',
+                label: '⚙️ Admin / Studio'
+            }
+        ],
 
         loginForm: {
             username: '',
@@ -375,7 +1555,26 @@
             adverts: []
         },
 
-        loading: false,
+        toast: {
+            visible: false,
+            message: '',
+            type: 'success',
+            timer: null
+        },
+
+
+        /* =====================================================
+           INITIALIZATION
+        ===================================================== */
+
+        async init() {
+
+            await this.loadContent();
+
+            await this.restoreSession();
+
+        },
+
 
         /* =====================================================
            API HELPER
@@ -383,34 +1582,59 @@
 
         async api(url, options = {}) {
 
-            const config = {
+            const requestOptions = {
                 credentials: 'include',
+                ...options,
                 headers: {
-                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    ...(options.body
+                        ? { 'Content-Type': 'application/json' }
+                        : {}),
                     ...(options.headers || {})
-                },
-                ...options
+                }
             };
 
             try {
 
-                const response = await fetch(url, config);
+                const response = await fetch(
+                    url,
+                    requestOptions
+                );
 
                 let result = {};
 
-                try {
-                    result = await response.json();
-                } catch {
-                    result = {};
+                const contentType =
+                    response.headers.get('content-type') || '';
+
+                if (
+                    contentType.includes('application/json')
+                ) {
+
+                    try {
+                        result = await response.json();
+                    } catch {
+                        result = {};
+                    }
+
+                } else {
+
+                    const text =
+                        await response.text();
+
+                    if (text) {
+                        result = {
+                            message: text
+                        };
+                    }
+
                 }
+
 
                 if (!response.ok) {
 
                     if (response.status === 401) {
 
-                        this.isLoggedIn = false;
-                        this.currentUsername = '';
-                        this.userRole = '';
+                        this.clearSession();
 
                     }
 
@@ -421,50 +1645,55 @@
                     );
                 }
 
+
                 return result;
 
             } catch (error) {
 
-                console.error('API error:', error);
+                console.error(
+                    '[ProPulse API]',
+                    error
+                );
 
                 throw error;
             }
         },
 
-        /* =====================================================
-           INITIALIZE APPLICATION
-        ===================================================== */
-
-        async init() {
-
-            await this.loadContent();
-
-            await this.restoreSession();
-        },
 
         /* =====================================================
-           LOAD DATABASE CONTENT
+           LOAD CONTENT
         ===================================================== */
 
-        async loadContent() {
+        async loadContent(options = {}) {
+
+            const showErrors =
+                options.showErrors !== false;
 
             this.loading = true;
 
             try {
 
-                const result = await this.api('/api/content');
+                const result =
+                    await this.api('/api/content');
 
-                this.data.posts = Array.isArray(result.all_posts)
-                    ? result.all_posts
-                    : [];
 
-                this.data.adverts = Array.isArray(result.adverts)
-                    ? result.adverts
-                    : [];
+                this.data.posts =
+                    Array.isArray(result.all_posts)
+                        ? result.all_posts
+                        : [];
 
-                this.data.users = Array.isArray(result.users)
-                    ? result.users
-                    : [];
+
+                this.data.adverts =
+                    Array.isArray(result.adverts)
+                        ? result.adverts
+                        : [];
+
+
+                this.data.users =
+                    Array.isArray(result.users)
+                        ? result.users
+                        : [];
+
 
                 if (result.settings) {
 
@@ -472,28 +1701,45 @@
                         result.settings.whatsapp_phone ||
                         this.whatsappSettings.phone;
 
+
                     this.whatsappSettings.message =
                         result.settings.whatsapp_message ||
                         this.whatsappSettings.message;
+
                 }
+
+
+                return true;
 
             } catch (error) {
 
-                console.error(error);
-
-                alert(
-                    'Unable to load portal data from the database. ' +
-                    'Please check your Render server and Supabase connection.'
+                console.error(
+                    'Unable to load portal content:',
+                    error
                 );
+
+                if (showErrors) {
+
+                    this.showToast(
+                        error.message ||
+                        'Unable to load portal data.',
+                        'error'
+                    );
+
+                }
+
+                return false;
 
             } finally {
 
                 this.loading = false;
+
             }
         },
 
+
         /* =====================================================
-           RESTORE LOGIN SESSION
+           SESSION
         ===================================================== */
 
         async restoreSession() {
@@ -503,35 +1749,182 @@
                 const result =
                     await this.api('/api/auth/me');
 
-                if (result.success) {
+                if (result && result.success) {
 
                     this.isLoggedIn = true;
-                    this.currentUsername = result.username;
-                    this.userRole = result.role;
+
+                    this.currentUsername =
+                        result.username || '';
+
+                    this.userRole =
+                        result.role || '';
+
+                } else {
+
+                    this.clearSession();
+
                 }
 
             } catch {
 
-                this.isLoggedIn = false;
-                this.currentUsername = '';
-                this.userRole = '';
+                this.clearSession();
+
             }
         },
 
+
+        clearSession() {
+
+            this.isLoggedIn = false;
+
+            this.currentUsername = '';
+
+            this.userRole = '';
+
+        },
+
+
         /* =====================================================
-           FILTER POSTS
+           NAVIGATION
+        ===================================================== */
+
+        selectTab(tab) {
+
+            this.activeTab = tab;
+
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
+        },
+
+
+        /* =====================================================
+           FILTERED POSTS
         ===================================================== */
 
         get filteredPosts() {
 
             if (this.activeTab === 'feed') {
+
                 return this.data.posts;
+
             }
 
             return this.data.posts.filter(
-                post => post.type === this.activeTab
+                post =>
+                    post.type === this.activeTab
             );
+
         },
+
+
+        /* =====================================================
+           BLOGGER USERS
+        ===================================================== */
+
+        get bloggerUsers() {
+
+            return this.data.users.filter(
+                user =>
+                    user.role === 'blogger'
+            );
+
+        },
+
+
+        /* =====================================================
+           WHATSAPP
+        ===================================================== */
+
+        get whatsappLinkAvailable() {
+
+            return Boolean(
+                this.cleanPhone(
+                    this.whatsappSettings.phone
+                )
+            );
+
+        },
+
+
+        get whatsappChatUrl() {
+
+            const phone =
+                this.cleanPhone(
+                    this.whatsappSettings.phone
+                );
+
+            const message =
+                this.whatsappSettings.message ||
+                'Hello ProPulse Sports!';
+
+
+            if (!phone) {
+
+                return '#';
+
+            }
+
+
+            return (
+                'https://wa.me/' +
+                phone +
+                '?text=' +
+                encodeURIComponent(message)
+            );
+
+        },
+
+
+        cleanPhone(phone) {
+
+            return String(
+                phone || ''
+            ).replace(
+                /\D/g,
+                ''
+            );
+
+        },
+
+
+        storyWhatsAppUrl(item) {
+
+            const phone =
+                this.cleanPhone(
+                    this.whatsappSettings.phone
+                );
+
+
+            const text =
+                '🔥 *' +
+                (item.title || 'ProPulse Sports Story') +
+                '*\n\n' +
+                'Read more on ProPulse Sports Portal:\n' +
+                window.location.href;
+
+
+            if (!phone) {
+
+                return (
+                    'https://api.whatsapp.com/send?text=' +
+                    encodeURIComponent(text)
+                );
+
+            }
+
+
+            return (
+                'https://wa.me/' +
+                phone +
+                '?text=' +
+                encodeURIComponent(text)
+            );
+
+        },
+
 
         /* =====================================================
            LOGIN
@@ -543,50 +1936,89 @@
                 !this.loginForm.username ||
                 !this.loginForm.pin
             ) {
-                alert('Enter your username and password.');
+
+                this.showToast(
+                    'Enter your username and password.',
+                    'error'
+                );
+
                 return;
+
             }
+
+
+            this.loading = true;
 
             try {
 
-                const result = await this.api(
-                    '/api/auth/login',
-                    {
-                        method: 'POST',
+                const result =
+                    await this.api(
+                        '/api/auth/login',
+                        {
+                            method: 'POST',
 
-                        body: JSON.stringify({
-                            username: this.loginForm.username,
-                            pin: this.loginForm.pin
-                        })
-                    }
+                            body: JSON.stringify({
+                                username:
+                                    this.loginForm.username,
+
+                                pin:
+                                    this.loginForm.pin
+                            })
+                        }
+                    );
+
+
+                if (!result.success) {
+
+                    throw new Error(
+                        result.message ||
+                        result.error ||
+                        'Authentication failed.'
+                    );
+
+                }
+
+
+                this.isLoggedIn = true;
+
+                this.currentUsername =
+                    result.username || '';
+
+                this.userRole =
+                    result.role || '';
+
+
+                this.loginForm.username = '';
+
+                this.loginForm.pin = '';
+
+
+                await this.loadContent({
+                    showErrors: false
+                });
+
+
+                this.showToast(
+                    'Authentication successful.',
+                    'success'
                 );
 
-                if (result.success) {
-
-                    this.isLoggedIn = true;
-
-                    this.currentUsername =
-                        result.username;
-
-                    this.userRole =
-                        result.role;
-
-                    this.loginForm.username = '';
-                    this.loginForm.pin = '';
-
-                    await this.loadContent();
-
-                    alert('Authentication successful.');
-                }
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Invalid username or password.'
+                    'Invalid username or password.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
         },
+
 
         /* =====================================================
            LOGOUT
@@ -605,83 +2037,141 @@
 
             } catch (error) {
 
-                console.error(error);
+                console.error(
+                    'Logout error:',
+                    error
+                );
 
             } finally {
 
-                this.isLoggedIn = false;
-                this.currentUsername = '';
-                this.userRole = '';
+                this.clearSession();
+
                 this.activeTab = 'feed';
+
+                this.resetPostForm();
+
+                this.showToast(
+                    'You have been signed out.',
+                    'success'
+                );
+
             }
+
         },
 
+
         /* =====================================================
-           PUBLISH / UPDATE CONTENT
+           PUBLISH / UPDATE
         ===================================================== */
 
         async publishContent() {
 
-            if (
-                !this.postPayload.title ||
-                !this.postPayload.body
-            ) {
+            const title =
+                String(
+                    this.postPayload.title || ''
+                ).trim();
 
-                alert(
-                    'Story title and body are required.'
+            const body =
+                String(
+                    this.postPayload.body || ''
+                ).trim();
+
+            if (!title || !body) {
+
+                this.showToast(
+                    'Story title and body are required.',
+                    'error'
                 );
 
                 return;
+
             }
+
+
+            const editing =
+                Boolean(
+                    this.postPayload.id
+                );
+
+
+            this.loading = true;
 
             try {
 
-                const result = await this.api(
-                    '/api/admin/publish',
-                    {
-                        method: 'POST',
+                const result =
+                    await this.api(
+                        '/api/admin/publish',
+                        {
+                            method: 'POST',
 
-                        body: JSON.stringify({
+                            body: JSON.stringify({
 
-                            id: this.postPayload.id,
+                                id:
+                                    this.postPayload.id,
 
-                            type: this.postType,
+                                type:
+                                    this.postType,
 
-                            category: this.postType,
+                                category:
+                                    this.postType,
 
-                            title:
-                                this.postPayload.title,
+                                title,
 
-                            media_url:
-                                this.postPayload.media_url,
+                                media_url:
+                                    String(
+                                        this.postPayload.media_url || ''
+                                    ).trim(),
 
-                            body:
-                                this.postPayload.body
-                        })
-                    }
+                                body
+
+                            })
+                        }
+                    );
+
+
+                if (!result.success) {
+
+                    throw new Error(
+                        result.message ||
+                        result.error ||
+                        'Unable to save story.'
+                    );
+
+                }
+
+
+                await this.loadContent({
+                    showErrors: false
+                });
+
+
+                this.resetPostForm();
+
+
+                this.showToast(
+                    editing
+                        ? 'Story successfully updated.'
+                        : 'Content successfully published to the portal.',
+                    'success'
                 );
 
-                if (result.success) {
-
-                    await this.loadContent();
-
-                    this.resetPostForm();
-
-                    alert(
-                        this.postPayload.id
-                            ? 'Story successfully updated.'
-                            : 'Content successfully published to portal!'
-                    );
-                }
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Unable to save story.'
+                    'Unable to save story.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
+
         },
+
 
         /* =====================================================
            EDIT POST
@@ -689,9 +2179,15 @@
 
         editPost(item) {
 
+            if (!item) {
+                return;
+            }
+
+
             this.postPayload = {
 
-                id: item.id,
+                id:
+                    item.id || null,
 
                 title:
                     item.title || '',
@@ -701,13 +2197,24 @@
 
                 body:
                     item.body || ''
+
             };
+
 
             this.postType =
                 item.type || 'uganda';
 
+
             this.activeTab = 'admin';
+
+
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
         },
+
 
         /* =====================================================
            DELETE POST
@@ -715,37 +2222,68 @@
 
         async deletePost(id) {
 
+            if (!id) {
+
+                this.showToast(
+                    'Invalid story identifier.',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
             if (
-                !confirm(
-                    'Are you sure you want to delete this story?'
+                !window.confirm(
+                    'Are you sure you want to delete this story? This action cannot be undone.'
                 )
             ) {
+
                 return;
+
             }
+
+
+            this.loading = true;
 
             try {
 
                 await this.api(
-                    `/api/admin/posts/${id}`,
+                    `/api/admin/posts/${encodeURIComponent(id)}`,
                     {
                         method: 'DELETE'
                     }
                 );
 
-                await this.loadContent();
 
-                alert(
-                    'Story deleted successfully.'
+                await this.loadContent({
+                    showErrors: false
+                });
+
+
+                this.showToast(
+                    'Story deleted successfully.',
+                    'success'
                 );
+
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Unable to delete story.'
+                    'Unable to delete story.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
+
         },
+
 
         /* =====================================================
            RESET POST FORM
@@ -762,8 +2300,14 @@
                 media_url: '',
 
                 body: ''
+
             };
+
+
+            this.postType = 'uganda';
+
         },
+
 
         /* =====================================================
            CREATE BLOGGER
@@ -771,52 +2315,92 @@
 
         async createBlogger() {
 
-            if (
-                !this.bloggerForm.username ||
-                !this.bloggerForm.pin
-            ) {
+            const username =
+                String(
+                    this.bloggerForm.username || ''
+                ).trim();
 
-                alert(
-                    'Enter a username and password.'
+            const pin =
+                String(
+                    this.bloggerForm.pin || ''
+                );
+
+
+            if (!username || !pin) {
+
+                this.showToast(
+                    'Enter a username and password.',
+                    'error'
                 );
 
                 return;
+
             }
+
+
+            this.loading = true;
 
             try {
 
-                await this.api(
-                    '/api/admin/bloggers',
-                    {
-                        method: 'POST',
+                const result =
+                    await this.api(
+                        '/api/admin/bloggers',
+                        {
+                            method: 'POST',
 
-                        body: JSON.stringify({
-                            username:
-                                this.bloggerForm.username,
+                            body: JSON.stringify({
+                                username,
+                                pin
+                            })
+                        }
+                    );
 
-                            pin:
-                                this.bloggerForm.pin
-                        })
-                    }
-                );
+
+                if (
+                    result.success === false
+                ) {
+
+                    throw new Error(
+                        result.message ||
+                        result.error ||
+                        'Unable to create blogger account.'
+                    );
+
+                }
+
 
                 this.bloggerForm.username = '';
+
                 this.bloggerForm.pin = '';
 
-                await this.loadContent();
 
-                alert(
-                    'Blogger account successfully created.'
+                await this.loadContent({
+                    showErrors: false
+                });
+
+
+                this.showToast(
+                    'Blogger account successfully created.',
+                    'success'
                 );
+
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Unable to create blogger account.'
+                    'Unable to create blogger account.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
+
         },
+
 
         /* =====================================================
            DELETE BLOGGER
@@ -824,37 +2408,61 @@
 
         async deleteBlogger(id) {
 
+            if (!id) {
+                return;
+            }
+
+
             if (
-                !confirm(
+                !window.confirm(
                     'Revoke account access for this blogger?'
                 )
             ) {
+
                 return;
+
             }
+
+
+            this.loading = true;
 
             try {
 
                 await this.api(
-                    `/api/admin/bloggers/${id}`,
+                    `/api/admin/bloggers/${encodeURIComponent(id)}`,
                     {
                         method: 'DELETE'
                     }
                 );
 
-                await this.loadContent();
 
-                alert(
-                    'Blogger account revoked.'
+                await this.loadContent({
+                    showErrors: false
+                });
+
+
+                this.showToast(
+                    'Blogger account revoked.',
+                    'success'
                 );
+
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Unable to delete blogger.'
+                    'Unable to revoke blogger account.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
+
         },
+
 
         /* =====================================================
            UPDATE PASSWORD
@@ -862,28 +2470,42 @@
 
         async updatePassword() {
 
-            if (
-                this.passwordForm.new_pin !==
-                this.passwordForm.confirm_pin
-            ) {
+            const newPin =
+                String(
+                    this.passwordForm.new_pin || ''
+                );
 
-                alert(
-                    'New passwords do not match!'
+            const confirmPin =
+                String(
+                    this.passwordForm.confirm_pin || ''
+                );
+
+
+            if (!newPin) {
+
+                this.showToast(
+                    'Enter a new password.',
+                    'error'
                 );
 
                 return;
+
             }
 
-            if (
-                !this.passwordForm.new_pin
-            ) {
 
-                alert(
-                    'Enter a new password.'
+            if (newPin !== confirmPin) {
+
+                this.showToast(
+                    'New passwords do not match.',
+                    'error'
                 );
 
                 return;
+
             }
+
+
+            this.loading = true;
 
             try {
 
@@ -893,39 +2515,91 @@
                         method: 'POST',
 
                         body: JSON.stringify({
+
                             username:
                                 this.passwordForm.username,
 
                             new_pin:
-                                this.passwordForm.new_pin,
+                                newPin,
 
                             confirm_pin:
-                                this.passwordForm.confirm_pin
+                                confirmPin
+
                         })
                     }
                 );
 
+
                 this.passwordForm.new_pin = '';
+
                 this.passwordForm.confirm_pin = '';
 
-                alert(
-                    'Password successfully updated.'
+
+                this.showToast(
+                    'Password successfully updated.',
+                    'success'
                 );
+
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Unable to update password.'
+                    'Unable to update password.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
+
         },
+
 
         /* =====================================================
            WHATSAPP SETTINGS
         ===================================================== */
 
         async updateWhatsAppSettings() {
+
+            const phone =
+                this.cleanPhone(
+                    this.whatsappSettings.phone
+                );
+
+            const message =
+                String(
+                    this.whatsappSettings.message || ''
+                ).trim();
+
+
+            if (!phone) {
+
+                this.showToast(
+                    'Enter a valid WhatsApp phone number.',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            if (!message) {
+
+                this.showToast(
+                    'Enter a default WhatsApp message.',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            this.loading = true;
 
             try {
 
@@ -936,42 +2610,104 @@
 
                         body: JSON.stringify({
 
-                            phone:
-                                this.whatsappSettings.phone,
+                            phone,
 
-                            message:
-                                this.whatsappSettings.message
+                            message
+
                         })
                     }
                 );
 
-                alert(
-                    'WhatsApp integration settings saved permanently.'
+
+                this.whatsappSettings.phone =
+                    phone;
+
+                this.whatsappSettings.message =
+                    message;
+
+
+                this.showToast(
+                    'WhatsApp integration settings saved.',
+                    'success'
                 );
+
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Unable to save WhatsApp settings.'
+                    'Unable to save WhatsApp settings.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
+
         },
 
+
         /* =====================================================
-           DEPLOY ADVERT
+           DEPLOY AD
         ===================================================== */
 
         async deployAdvert() {
 
-            if (!this.adPayload.title) {
+            const title =
+                String(
+                    this.adPayload.title || ''
+                ).trim();
 
-                alert(
-                    'Sponsor brand name is required.'
+
+            if (!title) {
+
+                this.showToast(
+                    'Sponsor brand name is required.',
+                    'error'
                 );
 
                 return;
+
             }
+
+
+            if (
+                this.adPayload.media_url &&
+                !this.isValidHttpUrl(
+                    this.adPayload.media_url
+                )
+            ) {
+
+                this.showToast(
+                    'The advertisement media URL is invalid.',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            if (
+                this.adPayload.target_url &&
+                !this.isValidHttpUrl(
+                    this.adPayload.target_url
+                )
+            ) {
+
+                this.showToast(
+                    'The advertisement destination URL is invalid.',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            this.loading = true;
 
             try {
 
@@ -982,25 +2718,32 @@
 
                         body: JSON.stringify({
 
-                            title:
-                                this.adPayload.title,
+                            title,
 
                             media_url:
-                                this.adPayload.media_url,
+                                String(
+                                    this.adPayload.media_url || ''
+                                ).trim(),
 
                             body:
-                                this.adPayload.body,
+                                String(
+                                    this.adPayload.body || ''
+                                ).trim(),
 
                             target_url:
-                                this.adPayload.target_url,
+                                String(
+                                    this.adPayload.target_url || ''
+                                ).trim(),
 
                             media_type:
                                 this.detectMediaType(
                                     this.adPayload.media_url
                                 )
+
                         })
                     }
                 );
+
 
                 this.adPayload = {
 
@@ -1011,86 +2754,214 @@
                     body: '',
 
                     target_url: ''
+
                 };
 
-                await this.loadContent();
 
-                alert(
-                    'Universal side ad deployed permanently.'
+                await this.loadContent({
+                    showErrors: false
+                });
+
+
+                this.showToast(
+                    'Universal side advertisement deployed.',
+                    'success'
                 );
+
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Unable to deploy advertisement.'
+                    'Unable to deploy advertisement.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
+
         },
 
+
         /* =====================================================
-           DETECT MEDIA TYPE
+           MEDIA
         ===================================================== */
+
+        hasMedia(url) {
+
+            return this.isValidHttpUrl(url);
+
+        },
+
+
+        isVideo(url) {
+
+            const value =
+                String(
+                    url || ''
+                ).toLowerCase();
+
+
+            return (
+                /\.mp4(?:[?#].*)?$/.test(value) ||
+                /\.webm(?:[?#].*)?$/.test(value) ||
+                /\.ogg(?:[?#].*)?$/.test(value) ||
+                value.includes('video')
+            );
+
+        },
+
 
         detectMediaType(url) {
 
             const value =
-                String(url || '').toLowerCase();
+                String(
+                    url || ''
+                ).toLowerCase();
+
 
             if (
-                value.includes('.mp4') ||
+                /\.mp4(?:[?#].*)?$/.test(value) ||
+                /\.webm(?:[?#].*)?$/.test(value) ||
+                /\.ogg(?:[?#].*)?$/.test(value) ||
                 value.includes('video')
             ) {
+
                 return 'video';
+
             }
+
 
             if (
-                value.includes('.gif') ||
+                /\.gif(?:[?#].*)?$/.test(value) ||
                 value.includes('giphy')
             ) {
+
                 return 'gif';
+
             }
 
+
             return 'image';
+
         },
 
+
         /* =====================================================
-           DELETE ADVERT
+           URL SAFETY
+        ===================================================== */
+
+        isValidHttpUrl(value) {
+
+            if (!value) {
+                return false;
+            }
+
+
+            try {
+
+                const url =
+                    new URL(
+                        String(value).trim()
+                    );
+
+
+                return (
+                    url.protocol === 'https:' ||
+                    url.protocol === 'http:'
+                );
+
+            } catch {
+
+                return false;
+
+            }
+
+        },
+
+
+        safeUrl(value) {
+
+            if (
+                !this.isValidHttpUrl(value)
+            ) {
+
+                return '#';
+
+            }
+
+
+            return String(
+                value
+            ).trim();
+
+        },
+
+
+        /* =====================================================
+           DELETE AD
         ===================================================== */
 
         async deleteAdvert(id) {
 
+            if (!id) {
+                return;
+            }
+
+
             if (
-                !confirm(
+                !window.confirm(
                     'Remove this advertisement permanently?'
                 )
             ) {
+
                 return;
+
             }
+
+
+            this.loading = true;
 
             try {
 
                 await this.api(
-                    `/api/admin/adverts/${id}`,
+                    `/api/admin/adverts/${encodeURIComponent(id)}`,
                     {
                         method: 'DELETE'
                     }
                 );
 
-                await this.loadContent();
 
-                alert(
-                    'Advertisement removed.'
+                await this.loadContent({
+                    showErrors: false
+                });
+
+
+                this.showToast(
+                    'Advertisement removed.',
+                    'success'
                 );
+
 
             } catch (error) {
 
-                alert(
+                this.showToast(
                     error.message ||
-                    'Unable to remove advertisement.'
+                    'Unable to remove advertisement.',
+                    'error'
                 );
+
+            } finally {
+
+                this.loading = false;
+
             }
+
         },
+
 
         /* =====================================================
            GOOGLE PAY
@@ -1098,14 +2969,26 @@
 
         triggerGooglePay() {
 
-            alert(
-                'Google Pay gateway initiated. ' +
-                'Connect your production Google Pay payment processor here.'
+            /*
+             * IMPORTANT:
+             * This is intentionally left as the frontend
+             * integration point.
+             *
+             * Your production Google Pay processor should
+             * create the payment transaction and verify it
+             * on the backend before premium content is unlocked.
+             */
+
+            this.showToast(
+                'Google Pay payment gateway is ready for connection to your production payment processor.',
+                'success'
             );
+
         },
 
+
         /* =====================================================
-           SHARE STORY
+           SHARE
         ===================================================== */
 
         async shareStory(item) {
@@ -1113,16 +2996,22 @@
             const url =
                 window.location.href;
 
+
             const shareData = {
 
                 title:
-                    item.title,
+                    item.title ||
+                    'ProPulse Sports',
 
                 text:
-                    item.body,
+                    item.body ||
+                    item.title ||
+                    'Check out this story on ProPulse Sports.',
 
                 url
+
             };
+
 
             try {
 
@@ -1134,16 +3023,54 @@
                         shareData
                     );
 
-                } else {
+                    return;
+
+                }
+
+
+                if (
+                    navigator.clipboard &&
+                    window.isSecureContext
+                ) {
 
                     await navigator.clipboard.writeText(
                         url
                     );
 
-                    alert(
-                        'Story link copied to clipboard!'
+                    this.showToast(
+                        'Story link copied to clipboard.',
+                        'success'
                     );
+
+                    return;
+
                 }
+
+
+                const temporaryInput =
+                    document.createElement('input');
+
+                temporaryInput.value =
+                    url;
+
+                document.body.appendChild(
+                    temporaryInput
+                );
+
+                temporaryInput.select();
+
+                document.execCommand(
+                    'copy'
+                );
+
+                temporaryInput.remove();
+
+
+                this.showToast(
+                    'Story link copied to clipboard.',
+                    'success'
+                );
+
 
             } catch (error) {
 
@@ -1151,11 +3078,98 @@
                     'Share cancelled:',
                     error
                 );
+
             }
+
+        },
+
+
+        /* =====================================================
+           FORMATTING
+        ===================================================== */
+
+        formatPostType(type) {
+
+            const labels = {
+
+                uganda:
+                    '🇺🇬 Ugandan Sports',
+
+                international:
+                    '🌍 International',
+
+                players:
+                    '⭐ Player Profile',
+
+                tips:
+                    '💎 VIP Content',
+
+                'news-link':
+                    '🔗 External News'
+
+            };
+
+
+            return (
+                labels[type] ||
+                type ||
+                'Sports'
+            );
+
+        },
+
+
+        /* =====================================================
+           TOAST SYSTEM
+        ===================================================== */
+
+        showToast(
+            message,
+            type = 'success'
+        ) {
+
+            clearTimeout(
+                this.toast.timer
+            );
+
+
+            this.toast.message =
+                message;
+
+            this.toast.type =
+                type;
+
+            this.toast.visible =
+                true;
+
+
+            this.toast.timer =
+                setTimeout(
+                    () => {
+                        this.hideToast();
+                    },
+                    4500
+                );
+
+        },
+
+
+        hideToast() {
+
+            this.toast.visible =
+                false;
+
+            clearTimeout(
+                this.toast.timer
+            );
+
         }
+
     };
+
 }
 </script>
 
 </body>
 </html>
+```
