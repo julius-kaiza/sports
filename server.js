@@ -1,216 +1,1145 @@
-const express = require('express');
-const { Pool } = require('pg');
-const path = require('path');
+const express = require("express");
+const { Pool } = require("pg");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const helmet = require("helmet");
+const cors = require("cors");
+const path = require("path");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || "development";
+
+const DATABASE_URL = process.env.DATABASE_URL;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "SuperAdmin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!DATABASE_URL) {
+console.error("ERROR: DATABASE_URL is not configured.");
+process.exit(1);
+}
+
+if (!JWT_SECRET) {
+console.error("ERROR: JWT_SECRET is not configured.");
+process.exit(1);
+}
+
+if (!ADMIN_PASSWORD) {
+console.error("ERROR: ADMIN_PASSWORD is not configured.");
+process.exit(1);
+}
+
+/* ============================================================
+EXPRESS CONFIGURATION
+============================================================ */
+
+app.set("trust proxy", 1);
+
+app.use(
+helmet({
+contentSecurityPolicy: false
+})
+);
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+/*
+If frontend and backend are served by this same Render service,
+CORS is not required for normal browser requests.
+
+It is still enabled for optional external frontend hosting.
+*/
+const allowedOrigins = (process.env.FRONTEND_URL || "")
+.split(",")
+.map(v => v.trim())
+.filter(Boolean);
+
+app.use(
+cors({
+origin: function (origin, callback) {
+if (!origin) return callback(null, true);
+
+```
+        if (allowedOrigins.length === 0) {
+            return callback(null, true);
+        }
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("Origin not allowed by CORS"));
+    },
+    credentials: true
+})
+```
+
+);
+
+/* ============================================================
+DATABASE
+============================================================ */
+
+const pool = new Pool({
+connectionString: DATABASE_URL,
+ssl: {
+rejectUnauthorized: false
+},
+max: 10,
+idleTimeoutMillis: 30000,
+connectionTimeoutMillis: 10000
+});
+
+pool.on("error", err => {
+console.error("Unexpected PostgreSQL pool error:", err);
+});
+
+/* ============================================================
+DATABASE INITIALIZATION
+============================================================ */
+
+async function initDB() {
+const client = await pool.connect();
+
+```
+try {
+    await client.query("BEGIN");
+
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            pin TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'blogger'
+                CHECK (role IN ('admin', 'blogger')),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    `);
+
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS posts (
+            id SERIAL PRIMARY KEY,
+            type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            body TEXT NOT NULL,
+            media_url TEXT DEFAULT '',
+            category TEXT DEFAULT '',
+            author TEXT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    `);
+
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS adverts (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            media_url TEXT DEFAULT '',
+            body TEXT DEFAULT '',
+            target_url TEXT DEFAULT '',
+            media_type TEXT DEFAULT 'image',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    `);
+
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS site_settings (
+            id SERIAL PRIMARY KEY,
+            setting_key TEXT NOT NULL UNIQUE,
+            setting_value TEXT DEFAULT '',
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    `);
+
+    await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_posts_created_at
+        ON posts(created_at DESC)
+    `);
+
+    await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_posts_type
+        ON posts(type)
+    `);
+
+    await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_users_username
+        ON users(username)
+    `);
+
+    await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_adverts_created_at
+        ON adverts(created_at DESC)
+    `);
+
+    await client.query(`
+        INSERT INTO site_settings (setting_key, setting_value)
+        VALUES
+            ('whatsapp_phone', '256700000000'),
+            (
+                'whatsapp_message',
+                'Hello ProPulse Sports, I am reaching out from your live portal!'
+            )
+        ON CONFLICT (setting_key) DO NOTHING
+    `);
+
+    /*
+       Create or upgrade SuperAdmin.
+
+       If an old plaintext SuperAdmin exists, replace the plaintext
+       PIN with a bcrypt hash.
+    */
+
+    const existingAdmin = await client.query(
+        `SELECT id, username, pin, role
+         FROM users
+         WHERE username = $1
+         LIMIT 1`,
+        [ADMIN_USERNAME]
+    );
+
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+
+    if (existingAdmin.rows.length === 0) {
+        await client.query(
+            `INSERT INTO users (username, pin, role)
+             VALUES ($1, $2, 'admin')`,
+            [ADMIN_USERNAME, passwordHash]
+        );
+
+        console.log(`Created administrator account: ${ADMIN_USERNAME}`);
+    } else {
+        const admin = existingAdmin.rows[0];
+
+        const alreadyHashed =
+            typeof admin.pin === "string" &&
+            admin.pin.startsWith("$2");
+
+        if (!alreadyHashed) {
+            await client.query(
+                `UPDATE users
+                 SET pin = $1, role = 'admin'
+                 WHERE id = $2`,
+                [passwordHash, admin.id]
+            );
+
+            console.log("Existing SuperAdmin password upgraded securely.");
+        } else {
+            await client.query(
+                `UPDATE users
+                 SET role = 'admin'
+                 WHERE id = $1`,
+                [admin.id]
+            );
+        }
+    }
+
+    await client.query("COMMIT");
+
+    console.log("Database initialized successfully.");
+} catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Database initialization failed:", error);
+    throw error;
+} finally {
+    client.release();
+}
+```
+
+}
+
+/* ============================================================
+AUTHENTICATION HELPERS
+============================================================ */
+
+function createAuthToken(user) {
+return jwt.sign(
+{
+id: user.id,
+username: user.username,
+role: user.role
+},
+JWT_SECRET,
+{
+expiresIn: "8h"
+}
+);
+}
+
+function getTokenFromRequest(req) {
+const cookies = req.headers.cookie || "";
+
+```
+const authCookie = cookies
+    .split(";")
+    .map(item => item.trim())
+    .find(item => item.startsWith("propulse_auth="));
+
+if (!authCookie) return null;
+
+return decodeURIComponent(authCookie.split("=").slice(1).join("="));
+```
+
+}
+
+function authenticate(req, res, next) {
+try {
+const token = getTokenFromRequest(req);
+
+```
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            error: "Authentication required."
+        });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    req.user = decoded;
+
+    next();
+} catch (error) {
+    return res.status(401).json({
+        success: false,
+        error: "Your session has expired. Please sign in again."
+    });
+}
+```
+
+}
+
+function requireAdmin(req, res, next) {
+if (!req.user || req.user.role !== "admin") {
+return res.status(403).json({
+success: false,
+error: "Administrator privileges required."
+});
+}
+
+```
+next();
+```
+
+}
+
+/* ============================================================
+BASIC INPUT HELPERS
+============================================================ */
+
+function clean(value, maxLength = 10000) {
+if (value === undefined || value === null) return "";
+
+```
+return String(value).trim().slice(0, maxLength);
+```
+
+}
+
+function validId(value) {
+const id = Number(value);
+
+```
+if (!Number.isInteger(id) || id <= 0) {
+    return null;
+}
+
+return id;
+```
+
+}
+
+/* ============================================================
+AUTH LOGIN
+============================================================ */
+
+app.post("/api/auth/login", async (req, res) => {
+try {
+const username = clean(req.body.username, 100);
+const pin = String(req.body.pin || "");
+
+```
+    if (!username || !pin) {
+        return res.status(400).json({
+            success: false,
+            error: "Username and password are required."
+        });
+    }
+
+    const result = await pool.query(
+        `SELECT id, username, pin, role
+         FROM users
+         WHERE username = $1
+         LIMIT 1`,
+        [username]
+    );
+
+    if (result.rows.length === 0) {
+        return res.status(401).json({
+            success: false,
+            error: "Invalid username or password."
+        });
+    }
+
+    const user = result.rows[0];
+
+    /*
+       New accounts use bcrypt.
+
+       This compatibility section permits an old plaintext password
+       to work once and then immediately upgrades it.
+    */
+
+    let passwordMatches = false;
+
+    if (user.pin && user.pin.startsWith("$2")) {
+        passwordMatches = await bcrypt.compare(pin, user.pin);
+    } else {
+        passwordMatches = pin === user.pin;
+
+        if (passwordMatches) {
+            const upgradedHash = await bcrypt.hash(pin, 12);
+
+            await pool.query(
+                `UPDATE users SET pin = $1 WHERE id = $2`,
+                [upgradedHash, user.id]
+            );
+        }
+    }
+
+    if (!passwordMatches) {
+        return res.status(401).json({
+            success: false,
+            error: "Invalid username or password."
+        });
+    }
+
+    const token = createAuthToken(user);
+
+    res.cookie("propulse_auth", token, {
+        httpOnly: true,
+        secure: NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 8 * 60 * 60 * 1000,
+        path: "/"
+    });
+
+    return res.json({
+        success: true,
+        username: user.username,
+        role: user.role
+    });
+} catch (error) {
+    console.error("Login error:", error);
+
+    res.status(500).json({
+        success: false,
+        error: "Unable to authenticate."
+    });
+}
+```
+
+});
+
+/* ============================================================
+AUTH SESSION
+============================================================ */
+
+app.get("/api/auth/me", authenticate, async (req, res) => {
+res.json({
+success: true,
+username: req.user.username,
+role: req.user.role
+});
+});
+
+app.post("/api/auth/logout", (req, res) => {
+res.clearCookie("propulse_auth", {
+httpOnly: true,
+secure: NODE_ENV === "production",
+sameSite: "lax",
+path: "/"
+});
+
+```
+res.json({
+    success: true
+});
+```
+
+});
+
+/* ============================================================
+GET ALL PORTAL DATA
+============================================================ */
+
+app.get("/api/content", async (req, res) => {
+try {
+const [posts, adverts, users, settings] = await Promise.all([
+pool.query(`                 SELECT
+                    id,
+                    type,
+                    title,
+                    body,
+                    media_url,
+                    category,
+                    author,
+                    created_at,
+                    updated_at
+                FROM posts
+                ORDER BY created_at DESC, id DESC
+            `),
+
+```
+        pool.query(`
+            SELECT
+                id,
+                title,
+                media_url,
+                body,
+                target_url,
+                media_type,
+                created_at
+            FROM adverts
+            ORDER BY created_at DESC, id DESC
+        `),
+
+        pool.query(`
+            SELECT
+                id,
+                username,
+                role,
+                created_at
+            FROM users
+            ORDER BY username ASC
+        `),
+
+        pool.query(`
+            SELECT setting_key, setting_value
+            FROM site_settings
+        `)
+    ]);
+
+    const settingMap = {};
+
+    settings.rows.forEach(setting => {
+        settingMap[setting.setting_key] = setting.setting_value;
+    });
+
+    res.json({
+        success: true,
+        all_posts: posts.rows,
+        adverts: adverts.rows,
+        users: users.rows,
+        settings: {
+            whatsapp_phone:
+                settingMap.whatsapp_phone || "256700000000",
+
+            whatsapp_message:
+                settingMap.whatsapp_message ||
+                "Hello ProPulse Sports, I am reaching out from your live portal!"
+        }
+    });
+} catch (error) {
+    console.error("Content loading error:", error);
+
+    res.status(500).json({
+        success: false,
+        error: "Unable to load portal data."
+    });
+}
+```
+
+});
+
+/* ============================================================
+CREATE / UPDATE POST
+============================================================ */
+
+app.post(
+"/api/admin/publish",
+authenticate,
+async (req, res) => {
+try {
+const id = validId(req.body.id);
+
+```
+        const type = clean(req.body.type, 50);
+        const title = clean(req.body.title, 300);
+        const body = clean(req.body.body, 30000);
+        const media_url = clean(req.body.media_url, 2000);
+        const category = clean(req.body.category || type, 100);
+
+        if (!type || !title || !body) {
+            return res.status(400).json({
+                success: false,
+                error: "Category, title and story body are required."
+            });
+        }
+
+        if (id) {
+            const existing = await pool.query(
+                `SELECT id, author
+                 FROM posts
+                 WHERE id = $1`,
+                [id]
+            );
+
+            if (existing.rows.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    error: "Story not found."
+                });
+            }
+
+            /*
+               Admin may edit anything.
+               Bloggers can only edit their own stories.
+            */
+
+            if (
+                req.user.role !== "admin" &&
+                existing.rows[0].author !== req.user.username
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    error: "You can only edit your own stories."
+                });
+            }
+
+            const result = await pool.query(
+                `UPDATE posts
+                 SET
+                    type = $1,
+                    title = $2,
+                    body = $3,
+                    media_url = $4,
+                    category = $5,
+                    updated_at = NOW()
+                 WHERE id = $6
+                 RETURNING *`,
+                [
+                    type,
+                    title,
+                    body,
+                    media_url,
+                    category,
+                    id
+                ]
+            );
+
+            return res.json({
+                success: true,
+                post: result.rows[0]
+            });
+        }
+
+        const result = await pool.query(
+            `INSERT INTO posts
+                (type, title, body, media_url, category, author)
+             VALUES
+                ($1, $2, $3, $4, $5, $6)
+             RETURNING *`,
+            [
+                type,
+                title,
+                body,
+                media_url,
+                category,
+                req.user.username
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            post: result.rows[0]
+        });
+    } catch (error) {
+        console.error("Publish error:", error);
+
+        res.status(500).json({
+            success: false,
+            error: "Unable to save story."
+        });
+    }
+}
+```
+
+);
+
+/* ============================================================
+DELETE POST
+============================================================ */
+
+app.delete(
+"/api/admin/posts/:id",
+authenticate,
+async (req, res) => {
+try {
+const id = validId(req.params.id);
+
+```
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid story ID."
+            });
+        }
+
+        const existing = await pool.query(
+            `SELECT id, author
+             FROM posts
+             WHERE id = $1`,
+            [id]
+        );
+
+        if (existing.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: "Story not found."
+            });
+        }
+
+        if (
+            req.user.role !== "admin" &&
+            existing.rows[0].author !== req.user.username
+        ) {
+            return res.status(403).json({
+                success: false,
+                error: "You can only delete your own stories."
+            });
+        }
+
+        await pool.query(
+            `DELETE FROM posts WHERE id = $1`,
+            [id]
+        );
+
+        res.json({
+            success: true
+        });
+    } catch (error) {
+        console.error("Delete post error:", error);
+
+        res.status(500).json({
+            success: false,
+            error: "Unable to delete story."
+        });
+    }
+}
+```
+
+);
+
+/* ============================================================
+CREATE BLOGGER
+============================================================ */
+
+app.post(
+"/api/admin/bloggers",
+authenticate,
+requireAdmin,
+async (req, res) => {
+try {
+const username = clean(req.body.username, 100);
+const pin = String(req.body.pin || "");
+
+```
+        if (!username || !pin) {
+            return res.status(400).json({
+                success: false,
+                error: "Username and password are required."
+            });
+        }
+
+        if (pin.length < 4) {
+            return res.status(400).json({
+                success: false,
+                error: "Password must contain at least 4 characters."
+            });
+        }
+
+        const passwordHash = await bcrypt.hash(pin, 12);
+
+        const result = await pool.query(
+            `INSERT INTO users
+                (username, pin, role)
+             VALUES
+                ($1, $2, 'blogger')
+             RETURNING id, username, role`,
+            [username, passwordHash]
+        );
+
+        res.status(201).json({
+            success: true,
+            user: result.rows[0]
+        });
+    } catch (error) {
+        if (error.code === "23505") {
+            return res.status(409).json({
+                success: false,
+                error: "Username already exists."
+            });
+        }
+
+        console.error("Create blogger error:", error);
+
+        res.status(500).json({
+            success: false,
+            error: "Unable to create blogger account."
+        });
+    }
+}
+```
+
+);
+
+/* ============================================================
+DELETE BLOGGER
+============================================================ */
+
+app.delete(
+"/api/admin/bloggers/:id",
+authenticate,
+requireAdmin,
+async (req, res) => {
+try {
+const id = validId(req.params.id);
+
+```
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid user ID."
+            });
+        }
+
+        await pool.query(
+            `DELETE FROM users
+             WHERE id = $1
+             AND role = 'blogger'`,
+            [id]
+        );
+
+        res.json({
+            success: true
+        });
+    } catch (error) {
+        console.error("Delete blogger error:", error);
+
+        res.status(500).json({
+            success: false,
+            error: "Unable to delete blogger."
+        });
+    }
+}
+```
+
+);
+
+/* ============================================================
+UPDATE PASSWORD
+============================================================ */
+
+app.post(
+"/api/admin/update-password",
+authenticate,
+requireAdmin,
+async (req, res) => {
+try {
+const username = clean(req.body.username, 100);
+const newPin = String(req.body.new_pin || "");
+const confirmPin = String(req.body.confirm_pin || "");
+
+```
+        if (!username || !newPin) {
+            return res.status(400).json({
+                success: false,
+                error: "Username and new password are required."
+            });
+        }
+
+        if (newPin !== confirmPin) {
+            return res.status(400).json({
+                success: false,
+                error: "New passwords do not match."
+            });
+        }
+
+        if (newPin.length < 4) {
+            return res.status(400).json({
+                success: false,
+                error: "Password must contain at least 4 characters."
+            });
+        }
+
+        const passwordHash = await bcrypt.hash(newPin, 12);
+
+        const result = await pool.query(
+            `UPDATE users
+             SET pin = $1
+             WHERE username = $2
+             RETURNING id, username, role`,
+            [passwordHash, username]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: "User not found."
+            });
+        }
+
+        res.json({
+            success: true
+        });
+    } catch (error) {
+        console.error("Password update error:", error);
+
+        res.status(500).json({
+            success: false,
+            error: "Unable to update password."
+        });
+    }
+}
+```
+
+);
+
+/* ============================================================
+CREATE ADVERT
+============================================================ */
+
+app.post(
+"/api/admin/adverts",
+authenticate,
+requireAdmin,
+async (req, res) => {
+try {
+const title = clean(req.body.title, 300);
+const media_url = clean(req.body.media_url, 2000);
+const body = clean(req.body.body, 10000);
+const target_url = clean(req.body.target_url, 2000);
+const media_type = clean(req.body.media_type || "image", 30);
+
+```
+        if (!title) {
+            return res.status(400).json({
+                success: false,
+                error: "Advertisement title is required."
+            });
+        }
+
+        const result = await pool.query(
+            `INSERT INTO adverts
+                (title, media_url, body, target_url, media_type)
+             VALUES
+                ($1, $2, $3, $4, $5)
+             RETURNING *`,
+            [
+                title,
+                media_url,
+                body,
+                target_url,
+                media_type
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            advert: result.rows[0]
+        });
+    } catch (error) {
+        console.error("Advert creation error:", error);
+
+        res.status(500).json({
+            success: false,
+            error: "Unable to create advertisement."
+        });
+    }
+}
+```
+
+);
+
+/* ============================================================
+DELETE ADVERT
+============================================================ */
+
+app.delete(
+"/api/admin/adverts/:id",
+authenticate,
+requireAdmin,
+async (req, res) => {
+try {
+const id = validId(req.params.id);
+
+```
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid advertisement ID."
+            });
+        }
+
+        await pool.query(
+            `DELETE FROM adverts WHERE id = $1`,
+            [id]
+        );
+
+        res.json({
+            success: true
+        });
+    } catch (error) {
+        console.error("Delete advert error:", error);
+
+        res.status(500).json({
+            success: false,
+            error: "Unable to delete advertisement."
+        });
+    }
+}
+```
+
+);
+
+/* ============================================================
+WHATSAPP SETTINGS
+============================================================ */
+
+app.post(
+"/api/admin/settings/whatsapp",
+authenticate,
+requireAdmin,
+async (req, res) => {
+try {
+const phone = clean(req.body.phone, 50);
+const message = clean(req.body.message, 1000);
+
+```
+        if (!phone || !message) {
+            return res.status(400).json({
+                success: false,
+                error: "WhatsApp phone number and message are required."
+            });
+        }
+
+        await pool.query(
+            `INSERT INTO site_settings
+                (setting_key, setting_value, updated_at)
+             VALUES
+                ('whatsapp_phone', $1, NOW())
+             ON CONFLICT (setting_key)
+             DO UPDATE SET
+                setting_value = EXCLUDED.setting_value,
+                updated_at = NOW()`,
+            [phone]
+        );
+
+        await pool.query(
+            `INSERT INTO site_settings
+                (setting_key, setting_value, updated_at)
+             VALUES
+                ('whatsapp_message', $1, NOW())
+             ON CONFLICT (setting_key)
+             DO UPDATE SET
+                setting_value = EXCLUDED.setting_value,
+                updated_at = NOW()`,
+            [message]
+        );
+
+        res.json({
+            success: true
+        });
+    } catch (error) {
+        console.error("WhatsApp settings error:", error);
+
+        res.status(500).json({
+            success: false,
+            error: "Unable to save WhatsApp settings."
+        });
+    }
+}
+```
+
+);
+
+/* ============================================================
+HEALTH CHECK
+============================================================ */
+
+app.get("/api/health", async (req, res) => {
+try {
+await pool.query("SELECT 1");
+
+```
+    res.json({
+        success: true,
+        database: "connected",
+        service: "ProPulse Sports Portal"
+    });
+} catch (error) {
+    res.status(503).json({
+        success: false,
+        database: "unavailable"
+    });
+}
+```
+
+});
+
+/* ============================================================
+STATIC FRONTEND
+============================================================ */
+
 app.use(express.static(path.join(__dirname)));
 
-// Initialize PostgreSQL Connection Pool for Supabase
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false } // Required for cloud databases like Supabase
+/* ============================================================
+ERROR HANDLER
+============================================================ */
+
+app.use((err, req, res, next) => {
+console.error("Unhandled server error:", err);
+
+```
+if (res.headersSent) {
+    return next(err);
+}
+
+res.status(500).json({
+    success: false,
+    error: "Internal server error."
+});
+```
+
 });
 
-pool.connect((err, client, release) => {
-    if (err) {
-        console.error('Database connection error: ', err.stack);
-    } else {
-        console.log('Connected to secure Supabase PostgreSQL database.');
-        release();
-    }
-});
+/* ============================================================
+START SERVER
+============================================================ */
 
-// Create Tables & Seed SuperAdmin if empty
-const initDB = async () => {
-    try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE,
-                pin TEXT,
-                role TEXT DEFAULT 'blogger'
-            )
-        `);
+async function startServer() {
+try {
+await initDB();
 
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS posts (
-                id SERIAL PRIMARY KEY,
-                type TEXT,
-                title TEXT,
-                body TEXT,
-                media_url TEXT,
-                category TEXT,
-                author TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS adverts (
-                id SERIAL PRIMARY KEY,
-                title TEXT,
-                media_url TEXT,
-                body TEXT,
-                target_url TEXT,
-                media_type TEXT
-            )
-        `);
-
-        // Seed default Master Admin if empty
-        const res = await pool.query(`SELECT COUNT(*) as count FROM users`);
-        if (parseInt(res.rows[0].count) === 0) {
-            await pool.query(`INSERT INTO users (username, pin, role) VALUES ('SuperAdmin', '1234', 'admin')`);
-            console.log('Default SuperAdmin seeded.');
-        }
-    } catch (err) {
-        console.error('Database initialization error:', err.message);
-    }
-};
-
-initDB();
-
-// API: Get All Content, Adverts, and Users
-app.get('/api/content', async (req, res) => {
-    try {
-        const posts = await pool.query(`SELECT * FROM posts ORDER BY id DESC`);
-        const adverts = await pool.query(`SELECT * FROM adverts ORDER BY id DESC`);
-        const users = await pool.query(`SELECT id, username, role FROM users`);
-        res.json({ all_posts: posts.rows, adverts: adverts.rows, users: users.rows });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// API: Publish or Update Content
-app.post('/api/admin/publish', async (req, res) => {
-    const { id, type, title, body, media_url, category, author } = req.body;
-    try {
-        if (id) {
-            await pool.query(
-                `UPDATE posts SET type = $1, title = $2, body = $3, media_url = $4, category = $5 WHERE id = $6`,
-                [type, title, body, media_url, category, id]
-            );
-            res.json({ success: true, postId: id });
-        } else {
-            const result = await pool.query(
-                `INSERT INTO posts (type, title, body, media_url, category, author) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-                [type, title, body, media_url, category, author || 'Staff Blogger']
-            );
-            res.json({ success: true, postId: result.rows[0].id });
-        }
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-// API: Delete Post
-app.delete('/api/admin/posts/:id', async (req, res) => {
-    try {
-        await pool.query(`DELETE FROM posts WHERE id = $1`, [req.params.id]);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ success: false });
-    }
-});
-
-// API: SuperAdmin Add Blogger
-app.post('/api/admin/bloggers', async (req, res) => {
-    const { username, pin } = req.body;
-    try {
-        const result = await pool.query(
-            `INSERT INTO users (username, pin, role) VALUES ($1, $2, 'blogger') RETURNING id`,
-            [username, pin]
+```
+    app.listen(PORT, () => {
+        console.log(
+            `ProPulse Sports Portal running on port ${PORT}`
         );
-        res.json({ success: true, userId: result.rows[0].id });
-    } catch (err) {
-        res.status(500).json({ success: false, error: 'Username may already exist' });
-    }
-});
+    });
+} catch (error) {
+    console.error(
+        "Server could not start because database initialization failed."
+    );
 
-// API: SuperAdmin Delete Blogger
-app.delete('/api/admin/bloggers/:id', async (req, res) => {
-    try {
-        await pool.query(`DELETE FROM users WHERE id = $1 AND role = 'blogger'`, [req.params.id]);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ success: false });
-    }
-});
+    process.exit(1);
+}
+```
 
-// API: Update User / Admin Password with Confirmation
-app.post('/api/admin/update-password', async (req, res) => {
-    const { username, new_pin, confirm_pin } = req.body;
-    if (!new_pin || new_pin !== confirm_pin) {
-        return res.status(400).json({ success: false, error: 'New passwords do not match or are empty.' });
-    }
-    try {
-        const updateRes = await pool.query(`UPDATE users SET pin = $1 WHERE username = $2`, [new_pin, username]);
-        if (updateRes.rowCount === 0) {
-            if (username === 'SuperAdmin') {
-                await pool.query(
-                    `INSERT INTO users (username, pin, role) VALUES ('SuperAdmin', $1, 'admin') ON CONFLICT (username) DO UPDATE SET pin = $1`,
-                    [new_pin]
-                );
-                return res.json({ success: true });
-            } else {
-                return res.status(404).json({ success: false, error: 'User not found.' });
-            }
-        } else {
-            res.json({ success: true });
-        }
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
+}
 
-// API: Deploy Permanent Universal Advert
-app.post('/api/admin/adverts', async (req, res) => {
-    const { title, media_url, body, target_url, media_type } = req.body;
-    try {
-        const result = await pool.query(
-            `INSERT INTO adverts (title, media_url, body, target_url, media_type) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [title, media_url, body, target_url || '', media_type || 'image']
-        );
-        res.json({ success: true, adId: result.rows[0].id });
-    } catch (err) {
-        res.status(500).json({ success: false });
-    }
-});
-
-// API: Delete Permanent Advert
-app.delete('/api/admin/adverts/:id', async (req, res) => {
-    try {
-        await pool.query(`DELETE FROM adverts WHERE id = $1`, [req.params.id]);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ success: false });
-    }
-});
-
-// API: Auth Check
-app.post('/api/auth/login', async (req, res) => {
-    const { username, pin } = req.body;
-    try {
-        const userQuery = await pool.query(`SELECT * FROM users WHERE username = $1 AND pin = $2`, [username, pin]);
-        if (userQuery.rows.length > 0) {
-            const user = userQuery.rows[0];
-            res.json({ success: true, role: user.role, username: user.username });
-        } else {
-            if (username === 'SuperAdmin' && pin === '1234') {
-                res.json({ success: true, role: 'admin', username: 'SuperAdmin' });
-            } else {
-                res.status(401).json({ success: false, message: 'Invalid Credentials' });
-            }
-        }
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-app.listen(PORT, () => {
-    console.log(`ProPulse Sports Portal running at http://localhost:${PORT}`);
-});
+startServer();
