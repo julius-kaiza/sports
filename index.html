@@ -318,150 +318,844 @@
     </a>
 
     <script>
-        function sportsPortal() {
-            return {
-                activeTab: 'feed',
-                isLoggedIn: false,
-                currentUsername: '',
-                userRole: '',
-                postType: 'uganda',
-                loginForm: { username: '', pin: '' },
-                postPayload: { id: null, title: '', media_url: '', body: '' },
-                bloggerForm: { username: '', pin: '' },
-                passwordForm: { username: 'SuperAdmin', new_pin: '', confirm_pin: '' },
-                whatsappSettings: { phone: '256700000000', message: 'Hello ProPulse Sports, I am reaching out from your live portal!' },
-                adPayload: { title: '', media_url: '', body: '', target_url: '' },
-                data: {
-                    users: [
-                        { id: 1, username: 'SuperAdmin', pin: '1234', role: 'admin' }
-                    ],
-                    posts: [
-                        { id: 1, type: 'uganda', title: 'Uganda Cranes Gear Up for Upcoming Qualifier Matches', media_url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop', body: 'The national team is stepping up training sessions at Namboole stadium ahead of the international showdown.', author: 'SuperAdmin' }
-                    ],
-                    adverts: [
-                        { id: 1, title: 'ProBet Uganda', media_url: '', body: 'Get 200% welcome bonus on your first sports deposit today!', target_url: 'https://example.com' }
-                    ]
+    function sportsPortal() {
+
+    return {
+
+        /* =====================================================
+           APPLICATION STATE
+        ===================================================== */
+
+        activeTab: 'feed',
+
+        isLoggedIn: false,
+        currentUsername: '',
+        userRole: '',
+
+        postType: 'uganda',
+
+        loginForm: {
+            username: '',
+            pin: ''
+        },
+
+        postPayload: {
+            id: null,
+            title: '',
+            media_url: '',
+            body: ''
+        },
+
+        bloggerForm: {
+            username: '',
+            pin: ''
+        },
+
+        passwordForm: {
+            username: 'SuperAdmin',
+            new_pin: '',
+            confirm_pin: ''
+        },
+
+        whatsappSettings: {
+            phone: '256700000000',
+            message: 'Hello ProPulse Sports, I am reaching out from your live portal!'
+        },
+
+        adPayload: {
+            title: '',
+            media_url: '',
+            body: '',
+            target_url: ''
+        },
+
+        data: {
+            users: [],
+            posts: [],
+            adverts: []
+        },
+
+        loading: false,
+
+        /* =====================================================
+           API HELPER
+        ===================================================== */
+
+        async api(url, options = {}) {
+
+            const config = {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {})
                 },
-                get filteredPosts() {
-                    if (this.activeTab === 'feed') return this.data.posts;
-                    return this.data.posts.filter(p => p.type === this.activeTab);
-                },
-                login() {
-                    let user = this.data.users.find(u => u.username === this.loginForm.username && u.pin === this.loginForm.pin);
-                    if (user) {
-                        this.isLoggedIn = true;
-                        this.currentUsername = user.username;
-                        this.userRole = user.role;
-                        this.loginForm.username = '';
-                        this.loginForm.pin = '';
-                    } else {
-                        alert('Invalid Username or PIN Code!');
-                    }
-                },
-                logout() {
-                    this.isLoggedIn = false;
-                    this.currentUsername = '';
-                    this.userRole = '';
-                    this.activeTab = 'feed';
-                },
-                publishContent() {
-                    if (!this.postPayload.title || !this.postPayload.body) return;
-                    if (this.postPayload.id) {
-                        let post = this.data.posts.find(p => p.id === this.postPayload.id);
-                        if (post) {
-                            post.title = this.postPayload.title;
-                            post.type = this.postType;
-                            post.media_url = this.postPayload.media_url;
-                            post.body = this.postPayload.body;
-                        }
-                    } else {
-                        let newPost = {
-                            id: Date.now(),
-                            type: this.postType,
-                            title: this.postPayload.title,
-                            media_url: this.postPayload.media_url,
-                            body: this.postPayload.body,
-                            author: this.currentUsername
-                        };
-                        this.data.posts.unshift(newPost);
-                    }
-                    this.resetPostForm();
-                    alert('Content successfully published to portal!');
-                },
-                editPost(item) {
-                    this.postPayload = { ...item };
-                    this.postType = item.type;
-                    this.activeTab = 'admin';
-                },
-                deletePost(id) {
-                    if (confirm('Are you sure you want to delete this story?')) {
-                        this.data.posts = this.data.posts.filter(p => p.id !== id);
-                    }
-                },
-                resetPostForm() {
-                    this.postPayload = { id: null, title: '', media_url: '', body: '' };
-                },
-                createBlogger() {
-                    if (this.data.users.some(u => u.username === this.bloggerForm.username)) {
-                        alert('Username already exists!');
-                        return;
-                    }
-                    this.data.users.push({
-                        id: Date.now(),
-                        username: this.bloggerForm.username,
-                        pin: this.bloggerForm.pin,
-                        role: 'blogger'
-                    });
-                    this.bloggerForm.username = '';
-                    this.bloggerForm.pin = '';
-                    alert('Blogger account successfully created.');
-                },
-                deleteBlogger(id) {
-                    if (confirm('Revoke account access for this blogger?')) {
-                        this.data.users = this.data.users.filter(u => u.id !== id);
-                    }
-                },
-                updatePassword() {
-                    if (this.passwordForm.new_pin !== this.passwordForm.confirm_pin) {
-                        alert('New PIN codes do not match!');
-                        return;
-                    }
-                    let targetUser = this.data.users.find(u => u.username === this.passwordForm.username);
-                    if (targetUser) {
-                        targetUser.pin = this.passwordForm.new_pin;
-                        this.passwordForm.new_pin = '';
-                        this.passwordForm.confirm_pin = '';
-                        alert('Password successfully updated.');
-                    }
-                },
-                updateWhatsAppSettings() {
-                    alert('WhatsApp integration settings updated successfully.');
-                },
-                deployAdvert() {
-                    this.data.adverts.push({
-                        id: Date.now(),
-                        title: this.adPayload.title,
-                        media_url: this.adPayload.media_url,
-                        body: this.adPayload.body,
-                        target_url: this.adPayload.target_url
-                    });
-                    this.adPayload = { title: '', media_url: '', body: '', target_url: '' };
-                    alert('Universal side ad deployed.');
-                },
-                deleteAdvert(id) {
-                    if (confirm('Remove this advertisement?')) {
-                        this.data.adverts = this.data.adverts.filter(a => a.id !== id);
-                    }
-                },
-                triggerGooglePay() {
-                    alert('Google Pay gateway initiated. Proceed with secure checkout.');
-                },
-                shareStory(item) {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert('Story link copied to clipboard!');
+                ...options
+            };
+
+            try {
+
+                const response = await fetch(url, config);
+
+                let result = {};
+
+                try {
+                    result = await response.json();
+                } catch {
+                    result = {};
                 }
+
+                if (!response.ok) {
+
+                    if (response.status === 401) {
+
+                        this.isLoggedIn = false;
+                        this.currentUsername = '';
+                        this.userRole = '';
+
+                    }
+
+                    throw new Error(
+                        result.error ||
+                        result.message ||
+                        `Request failed (${response.status})`
+                    );
+                }
+
+                return result;
+
+            } catch (error) {
+
+                console.error('API error:', error);
+
+                throw error;
+            }
+        },
+
+        /* =====================================================
+           INITIALIZE APPLICATION
+        ===================================================== */
+
+        async init() {
+
+            await this.loadContent();
+
+            await this.restoreSession();
+        },
+
+        /* =====================================================
+           LOAD DATABASE CONTENT
+        ===================================================== */
+
+        async loadContent() {
+
+            this.loading = true;
+
+            try {
+
+                const result = await this.api('/api/content');
+
+                this.data.posts = Array.isArray(result.all_posts)
+                    ? result.all_posts
+                    : [];
+
+                this.data.adverts = Array.isArray(result.adverts)
+                    ? result.adverts
+                    : [];
+
+                this.data.users = Array.isArray(result.users)
+                    ? result.users
+                    : [];
+
+                if (result.settings) {
+
+                    this.whatsappSettings.phone =
+                        result.settings.whatsapp_phone ||
+                        this.whatsappSettings.phone;
+
+                    this.whatsappSettings.message =
+                        result.settings.whatsapp_message ||
+                        this.whatsappSettings.message;
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    'Unable to load portal data from the database. ' +
+                    'Please check your Render server and Supabase connection.'
+                );
+
+            } finally {
+
+                this.loading = false;
+            }
+        },
+
+        /* =====================================================
+           RESTORE LOGIN SESSION
+        ===================================================== */
+
+        async restoreSession() {
+
+            try {
+
+                const result =
+                    await this.api('/api/auth/me');
+
+                if (result.success) {
+
+                    this.isLoggedIn = true;
+                    this.currentUsername = result.username;
+                    this.userRole = result.role;
+                }
+
+            } catch {
+
+                this.isLoggedIn = false;
+                this.currentUsername = '';
+                this.userRole = '';
+            }
+        },
+
+        /* =====================================================
+           FILTER POSTS
+        ===================================================== */
+
+        get filteredPosts() {
+
+            if (this.activeTab === 'feed') {
+                return this.data.posts;
+            }
+
+            return this.data.posts.filter(
+                post => post.type === this.activeTab
+            );
+        },
+
+        /* =====================================================
+           LOGIN
+        ===================================================== */
+
+        async login() {
+
+            if (
+                !this.loginForm.username ||
+                !this.loginForm.pin
+            ) {
+                alert('Enter your username and password.');
+                return;
+            }
+
+            try {
+
+                const result = await this.api(
+                    '/api/auth/login',
+                    {
+                        method: 'POST',
+
+                        body: JSON.stringify({
+                            username: this.loginForm.username,
+                            pin: this.loginForm.pin
+                        })
+                    }
+                );
+
+                if (result.success) {
+
+                    this.isLoggedIn = true;
+
+                    this.currentUsername =
+                        result.username;
+
+                    this.userRole =
+                        result.role;
+
+                    this.loginForm.username = '';
+                    this.loginForm.pin = '';
+
+                    await this.loadContent();
+
+                    alert('Authentication successful.');
+                }
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Invalid username or password.'
+                );
+            }
+        },
+
+        /* =====================================================
+           LOGOUT
+        ===================================================== */
+
+        async logout() {
+
+            try {
+
+                await this.api(
+                    '/api/auth/logout',
+                    {
+                        method: 'POST'
+                    }
+                );
+
+            } catch (error) {
+
+                console.error(error);
+
+            } finally {
+
+                this.isLoggedIn = false;
+                this.currentUsername = '';
+                this.userRole = '';
+                this.activeTab = 'feed';
+            }
+        },
+
+        /* =====================================================
+           PUBLISH / UPDATE CONTENT
+        ===================================================== */
+
+        async publishContent() {
+
+            if (
+                !this.postPayload.title ||
+                !this.postPayload.body
+            ) {
+
+                alert(
+                    'Story title and body are required.'
+                );
+
+                return;
+            }
+
+            try {
+
+                const result = await this.api(
+                    '/api/admin/publish',
+                    {
+                        method: 'POST',
+
+                        body: JSON.stringify({
+
+                            id: this.postPayload.id,
+
+                            type: this.postType,
+
+                            category: this.postType,
+
+                            title:
+                                this.postPayload.title,
+
+                            media_url:
+                                this.postPayload.media_url,
+
+                            body:
+                                this.postPayload.body
+                        })
+                    }
+                );
+
+                if (result.success) {
+
+                    await this.loadContent();
+
+                    this.resetPostForm();
+
+                    alert(
+                        this.postPayload.id
+                            ? 'Story successfully updated.'
+                            : 'Content successfully published to portal!'
+                    );
+                }
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Unable to save story.'
+                );
+            }
+        },
+
+        /* =====================================================
+           EDIT POST
+        ===================================================== */
+
+        editPost(item) {
+
+            this.postPayload = {
+
+                id: item.id,
+
+                title:
+                    item.title || '',
+
+                media_url:
+                    item.media_url || '',
+
+                body:
+                    item.body || ''
+            };
+
+            this.postType =
+                item.type || 'uganda';
+
+            this.activeTab = 'admin';
+        },
+
+        /* =====================================================
+           DELETE POST
+        ===================================================== */
+
+        async deletePost(id) {
+
+            if (
+                !confirm(
+                    'Are you sure you want to delete this story?'
+                )
+            ) {
+                return;
+            }
+
+            try {
+
+                await this.api(
+                    `/api/admin/posts/${id}`,
+                    {
+                        method: 'DELETE'
+                    }
+                );
+
+                await this.loadContent();
+
+                alert(
+                    'Story deleted successfully.'
+                );
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Unable to delete story.'
+                );
+            }
+        },
+
+        /* =====================================================
+           RESET POST FORM
+        ===================================================== */
+
+        resetPostForm() {
+
+            this.postPayload = {
+
+                id: null,
+
+                title: '',
+
+                media_url: '',
+
+                body: ''
+            };
+        },
+
+        /* =====================================================
+           CREATE BLOGGER
+        ===================================================== */
+
+        async createBlogger() {
+
+            if (
+                !this.bloggerForm.username ||
+                !this.bloggerForm.pin
+            ) {
+
+                alert(
+                    'Enter a username and password.'
+                );
+
+                return;
+            }
+
+            try {
+
+                await this.api(
+                    '/api/admin/bloggers',
+                    {
+                        method: 'POST',
+
+                        body: JSON.stringify({
+                            username:
+                                this.bloggerForm.username,
+
+                            pin:
+                                this.bloggerForm.pin
+                        })
+                    }
+                );
+
+                this.bloggerForm.username = '';
+                this.bloggerForm.pin = '';
+
+                await this.loadContent();
+
+                alert(
+                    'Blogger account successfully created.'
+                );
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Unable to create blogger account.'
+                );
+            }
+        },
+
+        /* =====================================================
+           DELETE BLOGGER
+        ===================================================== */
+
+        async deleteBlogger(id) {
+
+            if (
+                !confirm(
+                    'Revoke account access for this blogger?'
+                )
+            ) {
+                return;
+            }
+
+            try {
+
+                await this.api(
+                    `/api/admin/bloggers/${id}`,
+                    {
+                        method: 'DELETE'
+                    }
+                );
+
+                await this.loadContent();
+
+                alert(
+                    'Blogger account revoked.'
+                );
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Unable to delete blogger.'
+                );
+            }
+        },
+
+        /* =====================================================
+           UPDATE PASSWORD
+        ===================================================== */
+
+        async updatePassword() {
+
+            if (
+                this.passwordForm.new_pin !==
+                this.passwordForm.confirm_pin
+            ) {
+
+                alert(
+                    'New passwords do not match!'
+                );
+
+                return;
+            }
+
+            if (
+                !this.passwordForm.new_pin
+            ) {
+
+                alert(
+                    'Enter a new password.'
+                );
+
+                return;
+            }
+
+            try {
+
+                await this.api(
+                    '/api/admin/update-password',
+                    {
+                        method: 'POST',
+
+                        body: JSON.stringify({
+                            username:
+                                this.passwordForm.username,
+
+                            new_pin:
+                                this.passwordForm.new_pin,
+
+                            confirm_pin:
+                                this.passwordForm.confirm_pin
+                        })
+                    }
+                );
+
+                this.passwordForm.new_pin = '';
+                this.passwordForm.confirm_pin = '';
+
+                alert(
+                    'Password successfully updated.'
+                );
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Unable to update password.'
+                );
+            }
+        },
+
+        /* =====================================================
+           WHATSAPP SETTINGS
+        ===================================================== */
+
+        async updateWhatsAppSettings() {
+
+            try {
+
+                await this.api(
+                    '/api/admin/settings/whatsapp',
+                    {
+                        method: 'POST',
+
+                        body: JSON.stringify({
+
+                            phone:
+                                this.whatsappSettings.phone,
+
+                            message:
+                                this.whatsappSettings.message
+                        })
+                    }
+                );
+
+                alert(
+                    'WhatsApp integration settings saved permanently.'
+                );
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Unable to save WhatsApp settings.'
+                );
+            }
+        },
+
+        /* =====================================================
+           DEPLOY ADVERT
+        ===================================================== */
+
+        async deployAdvert() {
+
+            if (!this.adPayload.title) {
+
+                alert(
+                    'Sponsor brand name is required.'
+                );
+
+                return;
+            }
+
+            try {
+
+                await this.api(
+                    '/api/admin/adverts',
+                    {
+                        method: 'POST',
+
+                        body: JSON.stringify({
+
+                            title:
+                                this.adPayload.title,
+
+                            media_url:
+                                this.adPayload.media_url,
+
+                            body:
+                                this.adPayload.body,
+
+                            target_url:
+                                this.adPayload.target_url,
+
+                            media_type:
+                                this.detectMediaType(
+                                    this.adPayload.media_url
+                                )
+                        })
+                    }
+                );
+
+                this.adPayload = {
+
+                    title: '',
+
+                    media_url: '',
+
+                    body: '',
+
+                    target_url: ''
+                };
+
+                await this.loadContent();
+
+                alert(
+                    'Universal side ad deployed permanently.'
+                );
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Unable to deploy advertisement.'
+                );
+            }
+        },
+
+        /* =====================================================
+           DETECT MEDIA TYPE
+        ===================================================== */
+
+        detectMediaType(url) {
+
+            const value =
+                String(url || '').toLowerCase();
+
+            if (
+                value.includes('.mp4') ||
+                value.includes('video')
+            ) {
+                return 'video';
+            }
+
+            if (
+                value.includes('.gif') ||
+                value.includes('giphy')
+            ) {
+                return 'gif';
+            }
+
+            return 'image';
+        },
+
+        /* =====================================================
+           DELETE ADVERT
+        ===================================================== */
+
+        async deleteAdvert(id) {
+
+            if (
+                !confirm(
+                    'Remove this advertisement permanently?'
+                )
+            ) {
+                return;
+            }
+
+            try {
+
+                await this.api(
+                    `/api/admin/adverts/${id}`,
+                    {
+                        method: 'DELETE'
+                    }
+                );
+
+                await this.loadContent();
+
+                alert(
+                    'Advertisement removed.'
+                );
+
+            } catch (error) {
+
+                alert(
+                    error.message ||
+                    'Unable to remove advertisement.'
+                );
+            }
+        },
+
+        /* =====================================================
+           GOOGLE PAY
+        ===================================================== */
+
+        triggerGooglePay() {
+
+            alert(
+                'Google Pay gateway initiated. ' +
+                'Connect your production Google Pay payment processor here.'
+            );
+        },
+
+        /* =====================================================
+           SHARE STORY
+        ===================================================== */
+
+        async shareStory(item) {
+
+            const url =
+                window.location.href;
+
+            const shareData = {
+
+                title:
+                    item.title,
+
+                text:
+                    item.body,
+
+                url
+            };
+
+            try {
+
+                if (
+                    navigator.share
+                ) {
+
+                    await navigator.share(
+                        shareData
+                    );
+
+                } else {
+
+                    await navigator.clipboard.writeText(
+                        url
+                    );
+
+                    alert(
+                        'Story link copied to clipboard!'
+                    );
+                }
+
+            } catch (error) {
+
+                console.log(
+                    'Share cancelled:',
+                    error
+                );
             }
         }
-    </script>
+    };
+}
+</script>
+
 </body>
 </html>
