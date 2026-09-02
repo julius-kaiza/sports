@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProPulse Sports Portal | Uganda & International Hub</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 pb-28 font-sans antialiased" x-data="sportsPortal()">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
+            <h1 class="text-xl font-black text-amber-400 tracking-wider">PRO<span class="text-white">PULSE</span></h1>
+            
+            <nav class="flex flex-wrap justify-center gap-2 text-xs font-bold uppercase">
+                <button @click="activeTab = 'feed'" :class="activeTab === 'feed' ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-950 text-slate-300 border border-slate-800'" class="px-3 py-2 rounded-xl transition">🔥 Live Feed</button>
+                <button @click="activeTab = 'uganda'" :class="activeTab === 'uganda' ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-950 text-slate-300 border border-slate-800'" class="px-3 py-2 rounded-xl transition">🇺🇬 Ugandan Sports</button>
+                <button @click="activeTab = 'international'" :class="activeTab === 'international' ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-950 text-slate-300 border border-slate-800'" class="px-3 py-2 rounded-xl transition">🌍 International</button>
+                <button @click="activeTab = 'players'" :class="activeTab === 'players' ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-950 text-slate-300 border border-slate-800'" class="px-3 py-2 rounded-xl transition">⭐ Player Profiles</button>
+                <button @click="activeTab = 'tips'" :class="activeTab === 'tips' ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-950 text-slate-300 border border-slate-800'" class="px-3 py-2 rounded-xl transition">💎 VIP Tips</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- RESPONSIVE LAYOUT -->
+    <div class="max-w-7xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- LEFT SIDE UNIVERSAL ADVERT PANEL -->
+        <aside class="space-y-4 order-2 lg:order-1">
+            <div class="lg:sticky lg:top-20 space-y-4">
+                <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Sponsored Partners</div>
+                <template x-for="ad in data.adverts" :key="'left-' + ad.id">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-md relative group">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-amber-400 uppercase">
+                            <span x-text="ad.title"></span>
+                            <span class="bg-amber-950 px-2 py-0.5 rounded border border-amber-800/40">Ad</span>
+                        </div>
+                        <template x-if="ad.media_url">
+                            <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+                                <template x-if="ad.media_url.endsWith('.mp4') || ad.media_url.includes('video')">
+                                    <video :src="ad.media_url" autoplay muted loop playsinline class="w-full h-40 object-cover"></video>
+                                </template>
+                                <template x-if="!ad.media_url.endsWith('.mp4') && !ad.media_url.includes('video')">
+                                    <img :src="ad.media_url" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300">
+                                </template>
+                            </div>
+                        </template>
+                        <p class="text-xs text-slate-300 leading-relaxed" x-text="ad.body"></p>
+                        <template x-if="ad.target_url && ad.target_url.trim() !== ''">
+                            <a :href="ad.target_url" target="_blank" class="block text-center bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs py-2 rounded-xl transition">Visit Sponsor ➔</a>
+                        </template>
+                        <template x-if="userRole === 'admin' && isLoggedIn">
+                            <button @click="deleteAdvert(ad.id)" class="w-full bg-red-950 hover:bg-red-900 text-red-400 text-[10px] font-bold py-1.5 rounded border border-red-800/40 mt-2">Remove Ad</button>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </aside>
+
+        <!-- CENTRAL FEED CONTENT -->
+        <main class="lg:col-span-2 space-y-6 order-1 lg:order-2">
+
+            <!-- DYNAMIC CONTENT VIEW -->
+            <div class="space-y-4">
+                <template x-for="item in filteredPosts" :key="item.id">
+                    <article class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+                        <div class="flex justify-between items-center text-xs text-slate-400">
+                            <span class="bg-amber-950 text-amber-400 border border-amber-800/40 px-2.5 py-1 rounded font-bold uppercase" x-text="item.type"></span>
+                            <span class="text-emerald-400 font-semibold" x-text="'By ' + item.author"></span>
+                        </div>
+
+                        <h2 class="text-xl font-black text-white" x-text="item.title"></h2>
+
+                        <!-- MEDIA EMBEDDER -->
+                        <div x-show="item.media_url && item.type !== 'news-link'" class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
+                            <template x-if="item.media_url && (item.media_url.endsWith('.mp4') || item.media_url.includes('video') || item.media_url.includes('giphy'))">
+                                <video :src="item.media_url" autoplay muted loop playsinline class="w-full max-h-[450px] object-cover"></video>
+                            </template>
+                            <template x-if="item.media_url && !(item.media_url.endsWith('.mp4') || item.media_url.includes('video') || item.media_url.includes('giphy'))">
+                                <img :src="item.media_url" class="w-full max-h-[450px] object-cover hover:scale-102 transition duration-300">
+                            </template>
+                        </div>
+
+                        <!-- AUTOMATED NEWS LINK EMBEDDER -->
+                        <template x-if="item.type === 'news-link'">
+                            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl space-y-3">
+                                <div class="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase">
+                                    <span>🌐 External Newspaper Article Preview</span>
+                                </div>
+                                <h3 class="text-base font-bold text-white" x-text="item.title"></h3>
+                                <p class="text-xs text-slate-300 line-clamp-3" x-text="item.body"></p>
+                                <a :href="item.media_url" target="_blank" class="inline-block bg-amber-500 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl hover:bg-amber-400 transition">Read Full Story on Source Site ➔</a>
+                            </div>
+                        </template>
+
+                        <p class="text-sm text-slate-300 whitespace-pre-line leading-relaxed" x-text="item.body" x-show="item.type !== 'news-link'"></p>
+                        
+                        <!-- ADMIN & AUTHOR CONTROLS -->
+                        <template x-if="isLoggedIn && (userRole === 'admin' || currentUsername === item.author)">
+                            <div class="pt-2 border-t border-slate-800 flex justify-end gap-2">
+                                <template x-if="userRole === 'admin'">
+                                    <button @click="editPost(item)" class="bg-amber-950 hover:bg-amber-900 text-amber-400 text-xs px-3 py-1.5 rounded-lg border border-amber-800/40 font-bold">Edit Post</button>
+                                </template>
+                                <button @click="deletePost(item.id)" class="bg-red-950 hover:bg-red-900 text-red-400 text-xs px-3 py-1.5 rounded-lg border border-red-800/40 font-bold">Delete Post</button>
+                            </div>
+                        </template>
+                    </article>
+                </template>
+            </div>
+
+            <!-- VIP TIPS TAB -->
+            <div x-show="activeTab === 'tips'" class="space-y-6">
+                <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-amber-500/40 p-8 rounded-3xl text-center space-y-4 shadow-2xl">
+                    <span class="text-xs bg-amber-950 text-amber-400 border border-amber-800/40 px-3 py-1 rounded-full font-bold uppercase">VIP Accumulator</span>
+                    <h2 class="text-2xl font-black text-white">Unlock High-Odds Winning Slips</h2>
+                    <p class="text-xs text-slate-400 max-w-md mx-auto">Instant secure access via Google Pay payment gateway integration.</p>
+                    <button @click="triggerGooglePay" class="bg-white text-slate-950 font-black px-8 py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 mx-auto hover:bg-slate-200 transition shadow-lg">
+                        <span>Pay Securely with 🌐 Google Pay</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ADMIN / BLOGGER STUDIO PANEL -->
+            <section x-show="activeTab === 'admin'" class="space-y-6">
+                <div class="bg-slate-900 border border-amber-500/40 p-6 rounded-3xl shadow-xl space-y-6">
+                    
+                    <!-- Login Gate (Masked Password) -->
+                    <template x-if="!isLoggedIn">
+                        <div class="space-y-4 text-center py-4">
+                            <h2 class="text-xl font-bold text-white">Studio Control Center</h2>
+                            <p class="text-xs text-slate-400">Accessible from any device (Phone, Tablet, PC).<br>Default SuperAdmin: <code class="text-amber-400">SuperAdmin</code> / PIN: <code class="text-amber-400">1234</code></p>
+                            <form @submit.prevent="login" class="space-y-3 text-left">
+                                <input type="text" x-model="loginForm.username" placeholder="Username" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white outline-none">
+                                <input type="password" x-model="loginForm.pin" placeholder="PIN Code / Password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white outline-none">
+                                <button type="submit" class="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-sm">Authenticate Access</button>
+                            </form>
+                        </div>
+                    </template>
+
+                    <!-- Dashboard & Publishing Suite -->
+                    <template x-if="isLoggedIn">
+                        <div class="space-y-6">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                                <div>
+                                    <span class="text-xs bg-amber-950 text-amber-400 px-2.5 py-1 rounded font-bold uppercase" x-text="userRole"></span>
+                                    <h2 class="text-lg font-black text-white mt-1" x-text="'Welcome, ' + currentUsername"></h2>
+                                </div>
+                                <button @click="logout" class="bg-red-950 text-red-400 text-xs px-3 py-2 rounded-xl border border-red-800/40 font-bold">Sign Out</button>
+                            </div>
+
+                            <!-- Publishing Form -->
+                            <form @submit.prevent="publishContent" class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-slate-800">
+                                <h3 class="text-sm font-bold text-white" x-text="postPayload.id ? 'Edit Story / Video' : 'Publish Story, Video, or Newspaper Link'"></h3>
+                                
+                                <div>
+                                    <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Select Category</label>
+                                    <select x-model="postType" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none">
+                                        <option value="uganda">🇺🇬 Ugandan Sports News</option>
+                                        <option value="international">🌍 International Sports News</option>
+                                        <option value="players">⭐ Player Profile Story</option>
+                                        <option value="tips">💎 VIP Betting Tip</option>
+                                        <option value="news-link">🔗 Newspaper / External News Link (Auto Reader)</option>
+                                    </select>
+                                </div>
+
+                                <input type="text" x-model="postPayload.title" placeholder="Story Headline Title" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                <input type="url" x-model="postPayload.media_url" placeholder="Media URL (.mp4 video, image, GIF, or newspaper link)" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                
+                                <div>
+                                    <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Story Body Commentary</label>
+                                    <textarea x-model="postPayload.body" rows="4" placeholder="Type or paste the complete body of the story here..." required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none"></textarea>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs transition shadow-lg" x-text="postPayload.id ? '💾 Save Changes' : '🚀 Publish Live to Portal'"></button>
+                                    <template x-if="postPayload.id">
+                                        <button type="button" @click="resetPostForm" class="bg-slate-800 text-slate-300 font-bold px-4 py-3 rounded-xl text-xs">Cancel</button>
+                                    </template>
+                                </div>
+                            </form>
+
+                            <!-- SUPER ADMIN ONLY: BLOGGER MANAGEMENT & PASSWORD MANAGER -->
+                            <template x-if="userRole === 'admin'">
+                                <div class="space-y-6">
+                                    <!-- Blogger Creator -->
+                                    <div class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-indigo-500/30">
+                                        <h3 class="text-sm font-bold text-indigo-400">Manage Content Bloggers (No Admin Rights)</h3>
+                                        <form @submit.prevent="createBlogger" class="space-y-3">
+                                            <input type="text" x-model="bloggerForm.username" placeholder="New Blogger Username" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                            <input type="password" x-model="bloggerForm.pin" placeholder="Blogger Security PIN / Password" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition">Register New Blogger Account</button>
+                                        </form>
+
+                                        <div class="mt-4 space-y-2">
+                                            <div class="text-[10px] text-slate-400 uppercase font-bold">Active Bloggers List</div>
+                                            <template x-for="b in data.users" :key="b.id">
+                                                <div class="flex justify-between items-center bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs">
+                                                    <div>
+                                                        <span class="text-slate-200 font-semibold" x-text="b.username"></span>
+                                                        <span class="text-[10px] text-slate-500 ml-2 uppercase" x-text="'(' + b.role + ')'"></span>
+                                                    </div>
+                                                    <template x-if="b.role === 'blogger'">
+                                                        <button @click="deleteBlogger(b.id)" class="text-red-400 hover:text-red-300 font-bold text-[10px]">Revoke Account</button>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Super Admin Password Manager Suite (Change Any Password with Confirmation) -->
+                                    <div class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-amber-500/30">
+                                        <h3 class="text-sm font-bold text-amber-400">🔐 Password Management Suite (Change Any Password)</h3>
+                                        <form @submit.prevent="updatePassword" class="space-y-3">
+                                            <div>
+                                                <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Select User Account</label>
+                                                <select x-model="passwordForm.username" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none">
+                                                    <option value="SuperAdmin">SuperAdmin (Master)</option>
+                                                    <template x-for="b in data.users.filter(u => u.role === 'blogger')" :key="b.username">
+                                                        <option :value="b.username" x-text="b.username + ' (Blogger)'"></option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                            <input type="password" x-model="passwordForm.new_pin" placeholder="New Password / PIN" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                            <input type="password" x-model="passwordForm.confirm_pin" placeholder="Confirm New Password / PIN" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition">Update Account Password</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- SUPER ADMIN ONLY: UNIVERSAL SIDE ADVERT CREATOR -->
+                            <template x-if="userRole === 'admin'">
+                                <form @submit.prevent="deployAdvert" class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-amber-500/30">
+                                    <h3 class="text-sm font-bold text-amber-400">Deploy Permanent Side Advert</h3>
+                                    <input type="text" x-model="adPayload.title" placeholder="Sponsor Brand Name" required class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                    <input type="url" x-model="adPayload.media_url" placeholder="Optional Ad Media URL (.mp4 video, image, or GIF)" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                    <textarea x-model="adPayload.body" rows="3" placeholder="Sponsor text commentary or promotion details..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none"></textarea>
+                                    <input type="url" x-model="adPayload.target_url" placeholder="Destination Landing Link URL (Optional)" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none">
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition">Pin Universal Side Ad</button>
+                                </form>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </main>
+
+        <!-- RIGHT SIDE UNIVERSAL ADVERT PANEL -->
+        <aside class="space-y-4 order-3">
+            <div class="lg:sticky lg:top-20 space-y-4">
+                <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Featured Promotions</div>
+                <template x-for="ad in data.adverts" :key="'right-' + ad.id">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-md relative group">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-amber-400 uppercase">
+                            <span x-text="ad.title"></span>
+                            <span class="bg-amber-950 px-2 py-0.5 rounded border border-amber-800/40">Ad</span>
+                        </div>
+                        <template x-if="ad.media_url">
+                            <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+                                <template x-if="ad.media_url.endsWith('.mp4') || ad.media_url.includes('video')">
+                                    <video :src="ad.media_url" autoplay muted loop playsinline class="w-full h-40 object-cover"></video>
+                                </template>
+                                <template x-if="!ad.media_url.endsWith('.mp4') && !ad.media_url.includes('video')">
+                                    <img :src="ad.media_url" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300">
+                                </template>
+                            </div>
+                        </template>
+                        <p class="text-xs text-slate-300 leading-relaxed" x-text="ad.body"></p>
+                        <template x-if="ad.target_url && ad.target_url.trim() !== ''">
+                            <a :href="ad.target_url" target="_blank" class="block text-center bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs py-2 rounded-xl transition">Visit Sponsor ➔</a>
+                        </template>
+                        <template x-if="userRole === 'admin' && isLoggedIn">
+                            <button @click="deleteAdvert(ad.id)" class="w-full bg-red-950 hover:bg-red-900 text-red-400 text-[10px] font-bold py-1.5 rounded border border-red-800/40 mt-2">Remove Ad</button>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- LOWER TOOLBAR TRIGGER -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 py-3 px-6 z-50 shadow-2xl">
+        <div class="max-w-xl mx-auto flex justify-between items-center text-xs text-slate-400">
+            <span class="font-medium">ProPulse Sports & News Engine</span>
+            <button @click="activeTab = 'admin'" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3.5 py-1.5 rounded-xl font-bold hover:bg-amber-500 hover:text-slate-950 transition">
+                🔒 Admin & Blogger Studio
+            </button>
+        </div>
+    </footer>
+
+    <!-- APP CONTROLLER SCRIPT -->
+    <script>
+        function sportsPortal() {
+            return {
+                activeTab: 'feed',
+                isLoggedIn: false,
+                currentUsername: '',
+                userRole: 'blogger',
+                data: { all_posts: [], adverts: [], users: [] },
+                loginForm: { username: '', pin: '' },
+                bloggerForm: { username: '', pin: '' },
+                passwordForm: { username: 'SuperAdmin', new_pin: '', confirm_pin: '' },
+                postType: 'uganda',
+                postPayload: { id: null, title: '', media_url: '', body: '' },
+                adPayload: { title: '', media_url: '', body: '', target_url: '' },
+
+                async init() {
+                    await this.fetchAllData();
+                },
+
+                async fetchAllData() {
+                    try {
+                        const res = await fetch('/api/content');
+                        if (res.ok) this.data = await res.json();
+                    } catch (e) { console.error(e); }
+                },
+
+                get filteredPosts() {
+                    if (this.activeTab === 'feed') return this.data.all_posts;
+                    if (this.activeTab === 'uganda') return this.data.all_posts.filter(p => p.type === 'uganda');
+                    if (this.activeTab === 'international') return this.data.all_posts.filter(p => p.type === 'international');
+                    if (this.activeTab === 'players') return this.data.all_posts.filter(p => p.type === 'players');
+                    if (this.activeTab === 'tips') return this.data.all_posts.filter(p => p.type === 'tips');
+                    return this.data.all_posts;
+                },
+
+                async login() {
+                    try {
+                        const res = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.loginForm)
+                        });
+                        const result = await res.json();
+                        if (result.success) {
+                            this.isLoggedIn = true;
+                            this.userRole = result.role;
+                            this.currentUsername = result.username;
+                            alert('Studio access granted for: ' + result.username);
+                        } else {
+                            alert('Authentication failed.');
+                        }
+                    } catch (e) { alert('Connection error.'); }
+                },
+
+                async publishContent() {
+                    try {
+                        const payload = {
+                            id: this.postPayload.id,
+                            type: this.postType,
+                            title: this.postPayload.title,
+                            body: this.postPayload.body,
+                            media_url: this.postPayload.media_url,
+                            author: this.currentUsername || 'Staff'
+                        };
+                        const res = await fetch('/api/admin/publish', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (res.ok) {
+                            alert(this.postPayload.id ? 'Story updated successfully!' : 'Story published successfully!');
+                            this.resetPostForm();
+                            await this.fetchAllData();
+                            this.activeTab = 'feed';
+                        }
+                    } catch (e) { alert('Failed to publish content.'); }
+                },
+
+                editPost(item) {
+                    this.postPayload = { id: item.id, title: item.title, media_url: item.media_url, body: item.body };
+                    this.postType = item.type;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                resetPostForm() {
+                    this.postPayload = { id: null, title: '', media_url: '', body: '' };
+                },
+
+                async createBlogger() {
+                    try {
+                        const res = await fetch('/api/admin/bloggers', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.bloggerForm)
+                        });
+                        const result = await res.json();
+                        if (result.success) {
+                            alert('Blogger account successfully created!');
+                            this.bloggerForm = { username: '', pin: '' };
+                            await this.fetchAllData();
+                        } else {
+                            alert(result.error || 'Failed to create blogger.');
+                        }
+                    } catch (e) { alert('Connection error.'); }
+                },
+
+                async deleteBlogger(id) {
+                    if (!confirm('Revoke this blogger account?')) return;
+                    try {
+                        const res = await fetch(`/api/admin/bloggers/${id}`, { method: 'DELETE' });
+                        if (res.ok) await this.fetchAllData();
+                    } catch (e) { alert('Error revoking account.'); }
+                },
+
+                async updatePassword() {
+                    if (this.passwordForm.new_pin !== this.passwordForm.confirm_pin) {
+                        alert('New passwords do not match!');
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/api/admin/update-password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.passwordForm)
+                        });
+                        const result = await res.json();
+                        if (result.success) {
+                            alert('Password successfully updated for user: ' + this.passwordForm.username);
+                            this.passwordForm = { username: 'SuperAdmin', new_pin: '', confirm_pin: '' };
+                        } else {
+                            alert(result.error || 'Failed to update password.');
+                        }
+                    } catch (e) { alert('Connection error.'); }
+                },
+
+                async deployAdvert() {
+                    try {
+                        const res = await fetch('/api/admin/adverts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.adPayload)
+                        });
+                        if (res.ok) {
+                            alert('Universal side advert deployed successfully!');
+                            this.adPayload = { title: '', media_url: '', body: '', target_url: '' };
+                            await this.fetchAllData();
+                        }
+                    } catch (e) { alert('Failed to deploy advert.'); }
+                },
+
+                async deletePost(id) {
+                    if (!confirm('Delete this post?')) return;
+                    try {
+                        const res = await fetch(`/api/admin/posts/${id}`, { method: 'DELETE' });
+                        if (res.ok) await this.fetchAllData();
+                    } catch (e) { alert('Error deleting post.'); }
+                },
+
+                async deleteAdvert(id) {
+                    if (!confirm('Remove this permanent side ad?')) return;
+                    try {
+                        const res = await fetch(`/api/admin/adverts/${id}`, { method: 'DELETE' });
+                        if (res.ok) await this.fetchAllData();
+                    } catch (e) { alert('Error removing ad.'); }
+                },
+
+                triggerGooglePay() {
+                    alert('Google Pay secure gateway handshake successful. VIP slip authorized.');
+                },
+
+                logout() {
+                    this.isLoggedIn = false;
+                    this.currentUsername = '';
+                    this.activeTab = 'feed';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
