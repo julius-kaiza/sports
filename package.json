@@ -1,19 +1,30 @@
 {
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "pg": "^8.11.3"
-  },
-  "name": "sports",
-  "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+"name": "propulse-sports-portal",
+"version": "2.0.0",
+"description": "ProPulse Sports Portal - Uganda and International Sports Hub",
+"main": "server.js",
+"scripts": {
+"start": "node server.js"
+},
+"dependencies": {
+"bcryptjs": "^3.0.2",
+"cors": "^2.8.5",
+"express": "^5.2.1",
+"helmet": "^8.1.0",
+"jsonwebtoken": "^9.0.2",
+"pg": "^8.16.3"
+},
+"engines": {
+"node": ">=20"
+},
+"keywords": [
+"sports",
+"uganda",
+"news",
+"portal",
+"express",
+"postgresql"
+],
+"license": "ISC",
+"type": "commonjs"
 }
