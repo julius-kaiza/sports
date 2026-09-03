@@ -593,6 +593,20 @@ app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) =
         return res.status(500).json({ success: false, error: "Failed to update advert." });
     }
 });
+
+// Add this route to your Express server backend
+app.delete('/api/admin/posts/:id', async (req, res) => {
+    try {
+        const postId = req.params.id;
+        
+        // TODO: Add code here to delete the post from your database/storage using postId
+        
+        res.json({ success: true, message: 'Post deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 /* ============================================================
    START SERVER
 ============================================================ */
