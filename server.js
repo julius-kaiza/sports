@@ -594,9 +594,6 @@ app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) =
     }
 });
 
-const path = require('path');
-const fs = require('fs').promises;
-
 app.delete('/api/admin/posts/:id', async (req, res) => {
     try {
         const postId = req.params.id;
