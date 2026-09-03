@@ -16,7 +16,17 @@ const PORT = Number(process.env.PORT) || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 const DATABASE_URL = process.env.DATABASE_URL;
-const JWT_SECRET = process.env.JWT_SECRET;
+
+// Temporary debug and fallback to prevent crash loops
+let JWT_SECRET = process.env.JWT_SECRET;
+
+console.log("DEBUG - DATABASE_URL exists:", !!DATABASE_URL);
+console.log("DEBUG - JWT_SECRET exists:", !!JWT_SECRET);
+
+if (!JWT_SECRET) {
+    console.warn("WARNING: JWT_SECRET is missing from environment. Using a temporary fallback for testing.");
+    JWT_SECRET = "fallback_secret_key_propulse_12345";
+}
 
 const ADMIN_USERNAME =
     String(process.env.ADMIN_USERNAME || "SuperAdmin").trim();
