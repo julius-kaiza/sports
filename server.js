@@ -1,12 +1,10 @@
 const path = require('path');
-const fs = require('fs').promises;
 const express = require("express");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const cors = require("cors");
-
 
 const app = express();
 
@@ -134,12 +132,12 @@ async function initDB() {
             )
         `);
 
-        // POSTS
+        // POSTS (Added UNIQUE constraint on title to prevent duplicate content)
         await client.query(`
             CREATE TABLE IF NOT EXISTS posts (
                 id SERIAL PRIMARY KEY,
                 type TEXT NOT NULL DEFAULT 'uganda',
-                title TEXT NOT NULL DEFAULT '',
+                title TEXT NOT NULL DEFAULT '' UNIQUE,
                 body TEXT NOT NULL DEFAULT '',
                 media_url TEXT DEFAULT '',
                 category TEXT DEFAULT '',
@@ -487,7 +485,47 @@ app.post("/api/admin/publish", authenticate, async (req, res) => {
             return res.json({ success: true, message: "Story published successfully." });
         }
     } catch (error) {
+        if (error.code === '23505') {
+            return res.status(400).json({ success: false, error: "A story with this title already exists." });
+        }
         return res.status(500).json({ success: false, error: "Failed to save story." });
+    }
+});
+
+// UPDATE POST ROUTE (PUT)
+app.put("/api/admin/posts/:id", authenticate, async (req, res) => {
+    try {
+        const postId = validId(req.params.id);
+        const type = clean(req.body.type, 50);
+        const title = clean(req.body.title, 300);
+        const body = clean(req.body.body, 30000);
+        const media_url = clean(req.body.media_url, 2000);
+        const category = clean(req.body.category || type, 100);
+
+        if (!postId) {
+            return res.status(400).json({ success: false, error: "Invalid story ID." });
+        }
+
+        const existing = await pool.query(`SELECT id, author FROM posts WHERE id = $1`, [postId]);
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "Story not found." });
+        }
+
+        if (req.user.role !== "admin" && existing.rows[0].author !== req.user.username) {
+            return res.status(403).json({ success: false, error: "Unauthorized to edit this story." });
+        }
+
+        await pool.query(
+            `UPDATE posts SET type = $1, title = $2, body = $3, media_url = $4, category = $5 WHERE id = $6`,
+            [type, title, body, media_url, category, postId]
+        );
+
+        return res.json({ success: true, message: "Story updated successfully." });
+    } catch (error) {
+        if (error.code === '23505') {
+            return res.status(400).json({ success: false, error: "A story with this title already exists." });
+        }
+        return res.status(500).json({ success: false, error: "Failed to update story." });
     }
 });
 
@@ -500,14 +538,12 @@ app.post("/api/admin/settings/whatsapp", authenticate, requireAdmin, async (req,
             return res.status(400).json({ success: false, error: "WhatsApp phone number is required." });
         }
 
-        // Update or insert whatsapp_phone
         await pool.query(
             `INSERT INTO site_settings (setting_key, setting_value) VALUES ('whatsapp_phone', $1)
              ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()`,
             [phone]
         );
 
-        // Update or insert whatsapp_message
         await pool.query(
             `INSERT INTO site_settings (setting_key, setting_value) VALUES ('whatsapp_message', $1)
              ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()`,
@@ -543,7 +579,6 @@ app.post("/api/admin/adverts", authenticate, requireAdmin, async (req, res) => {
     }
 });
 
-// DELETE ADVERT (Supports UUIDs and text/integer IDs)
 app.delete("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) => {
     try {
         const id = clean(req.params.id, 100);
@@ -562,7 +597,6 @@ app.delete("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res
     }
 });
 
-// UPDATE/EDIT ADVERT (Supports UUIDs and text/integer IDs)
 app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) => {
     try {
         const id = clean(req.params.id, 100);
@@ -590,48 +624,40 @@ app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) =
 
         return res.json({ success: true, message: "Advert updated successfully." });
     } catch (error) {
-        // Polished addition: Log the actual error to your Render console for debugging
         console.error("Failed to update advert:", error.message);
         return res.status(500).json({ success: false, error: "Failed to update advert." });
     }
 });
 
-app.delete('/api/admin/posts/:id', async (req, res) => {
+// DELETE POST ROUTE (PostgreSQL-backed)
+app.delete('/api/admin/posts/:id', authenticate, async (req, res) => {
     try {
-        const postId = req.params.id;
-        console.log(`[Delete Route] Trying to delete ID: "${postId}" (Type: ${typeof postId})`);
-
-        const filePath = path.join(__dirname, 'data.json');
-        let rawData = await fs.readFile(filePath, 'utf8');
-        let data = JSON.parse(rawData);
-
-        if (!Array.isArray(data.posts)) {
-            data.posts = [];
+        const postId = clean(req.params.id, 100);
+        if (!postId) {
+            return res.status(400).json({ success: false, error: "Invalid post ID." });
         }
 
-        // Print existing IDs in data.json to your server console logs for debugging
-        console.log('[Delete Route] Existing post IDs in data.json:', data.posts.map(p => ({ id: p.id, title: p.title })));
+        const existing = await pool.query(`SELECT id, author FROM posts WHERE id::text = $1`, [postId]);
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "Story not found." });
+        }
 
-        const initialLength = data.posts.length;
-        
-        // Filter out the post (checking both .id and ._id just in case)
-        data.posts = data.posts.filter(p => {
-            const currentId = p.id || p._id;
-            return String(currentId) !== String(postId);
-        });
+        if (req.user.role !== "admin" && existing.rows[0].author !== req.user.username) {
+            return res.status(403).json({ success: false, error: "Unauthorized to delete this story." });
+        }
 
-        console.log(`[Delete Route] Before count: ${initialLength}, After count: ${data.posts.length}`);
+        const result = await pool.query(`DELETE FROM posts WHERE id::text = $1 RETURNING id`, [postId]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "Story not found." });
+        }
 
-        // Save the updated array back to data.json
-        await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
-
-        return res.json({ success: true, message: 'Post deleted successfully' });
-
+        return res.json({ success: true, message: "Post deleted successfully." });
     } catch (error) {
         console.error('[Delete Route Error]:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Failed to delete story." });
     }
 });
+
 /* ============================================================
    START SERVER
 ============================================================ */
