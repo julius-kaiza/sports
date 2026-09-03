@@ -602,56 +602,37 @@ app.delete('/api/admin/posts/:id', async (req, res) => {
         // Safely resolve the absolute path to data.json
         const filePath = path.join(__dirname, 'data.json');
 
-        // 1. Read current data asynchronously
-        let rawData;
+        // 1. Check if data.json exists, if not, create it with an empty structure
         try {
-            rawData = await fs.readFile(filePath, 'utf8');
-        } catch (readErr) {
-            console.error('[Delete Route] Could not read data.json:', readErr);
-            return res.status(404).json({ success: false, error: 'Data file not found on server.' });
+            await fs.access(filePath);
+        } catch {
+            console.log('[Delete Route] data.json not found, creating a new one...');
+            const initialData = { users: [], posts: [], adverts: [], settings: {} };
+            await fs.writeFile(filePath, JSON.stringify(initialData, null, 2), 'utf8');
         }
 
+        // 2. Read current data asynchronously
+        let rawData = await fs.readFile(filePath, 'utf8');
         let data = JSON.parse(rawData);
 
         if (!Array.isArray(data.posts)) {
             data.posts = [];
         }
 
-        // 2. Filter out the post to delete
+        // 3. Filter out the post to delete (handle both string and number IDs)
         const initialLength = data.posts.length;
         data.posts = data.posts.filter(p => String(p.id) !== String(postId));
         console.log(`[Delete Route] Posts before: ${initialLength}, after filtering: ${data.posts.length}`);
 
-        // 3. Save the updated data back to the file asynchronously
+        // 4. Save the updated data back to the file asynchronously
         await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 
-        // 4. Send guaranteed success response
+        // 5. Send success response
         return res.json({ success: true, message: 'Post deleted successfully' });
 
     } catch (error) {
         console.error('[Delete Route Critical Error]:', error);
         return res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.delete('/api/admin/posts/:id', async (req, res) => {
-    try {
-        const postId = req.params.id;
-        
-        // 1. Read your current data (adjust path/variable as needed)
-        let rawData = fs.readFileSync('data.json', 'utf8');
-        let data = JSON.parse(rawData);
-
-        // 2. Filter out the post to delete (handle both string and number IDs)
-        const initialLength = data.posts.length;
-        data.posts = data.posts.filter(p => String(p.id) !== String(postId));
-
-        // 3. Save the updated data back to the file
-        fs.writeFileSync('data.json', JSON.stringify(data, null, 2));
-
-        res.json({ success: true, message: 'Post deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
     }
 });
 
