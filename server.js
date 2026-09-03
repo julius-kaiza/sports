@@ -588,6 +588,8 @@ app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) =
 
         return res.json({ success: true, message: "Advert updated successfully." });
     } catch (error) {
+        // Polished addition: Log the actual error to your Render console for debugging
+        console.error("Failed to update advert:", error.message);
         return res.status(500).json({ success: false, error: "Failed to update advert." });
     }
 });
