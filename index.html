@@ -2965,16 +2965,16 @@ function sportsPortal() {
 
         },
 
-        /* =====================================================
+       /* =====================================================
             EDIT AD
         ===================================================== */
 
-        async editAdvert(ad) {
-            if (!ad || !ad.id) {
+        editAdvert(ad) {
+            if (!ad?.id) {
                 return;
             }
 
-            // Populate your form object with the ad's current values
+            // Populate the form object with the ad's current values
             this.editingAdvertId = ad.id;
             this.advertForm = {
                 title: ad.title || '',
@@ -2984,13 +2984,13 @@ function sportsPortal() {
                 media_type: ad.media_type || 'image'
             };
 
-            // Smoothly scroll up to the form so you can see it filling up
+            // Smoothly scroll up to the form section
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
             });
         },
-
+        
         /* =====================================================
            GOOGLE PAY
         ===================================================== */
