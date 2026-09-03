@@ -540,6 +540,57 @@ app.post("/api/admin/adverts", authenticate, requireAdmin, async (req, res) => {
         return res.status(500).json({ success: false, error: "Failed to publish advert." });
     }
 });
+
+// DELETE ADVERT
+app.delete("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) => {
+    try {
+        const id = validId(req.params.id);
+        if (!id) {
+            return res.status(400).json({ success: false, error: "Invalid advert ID." });
+        }
+
+        const result = await pool.query(`DELETE FROM adverts WHERE id = $1 RETURNING id`, [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "Advert not found." });
+        }
+
+        return res.json({ success: true, message: "Advert deleted successfully." });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: "Failed to delete advert." });
+    }
+});
+
+// UPDATE/EDIT ADVERT (supports both PUT and POST depending on your frontend implementation)
+app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) => {
+    try {
+        const id = validId(req.params.id);
+        const title = clean(req.body.title, 300);
+        const media_url = clean(req.body.media_url, 2000);
+        const body = clean(req.body.body, 5000);
+        const target_url = clean(req.body.target_url, 2000);
+        const media_type = clean(req.body.media_type || "image", 50);
+
+        if (!id) {
+            return res.status(400).json({ success: false, error: "Invalid advert ID." });
+        }
+        if (!title) {
+            return res.status(400).json({ success: false, error: "Advert title is required." });
+        }
+
+        const result = await pool.query(
+            `UPDATE adverts SET title = $1, media_url = $2, body = $3, target_url = $4, media_type = $5 WHERE id = $6 RETURNING id`,
+            [title, media_url, body, target_url, media_type, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "Advert not found." });
+        }
+
+        return res.json({ success: true, message: "Advert updated successfully." });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: "Failed to update advert." });
+    }
+});
 /* ============================================================
    START SERVER
 ============================================================ */
