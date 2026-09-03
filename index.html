@@ -2970,11 +2970,9 @@ function sportsPortal() {
         ===================================================== */
 
         editAdvert(ad) {
-            if (!ad?.id) {
-                return;
-            }
+            if (!ad?.id) return;
 
-            // Populate the form object with the ad's current values
+            // Populate the form
             this.editingAdvertId = ad.id;
             this.advertForm = {
                 title: ad.title || '',
@@ -2984,7 +2982,10 @@ function sportsPortal() {
                 media_type: ad.media_type || 'image'
             };
 
-            // Smoothly scroll up to the form section
+            // ➔ CRITICAL: If your form is hidden by default, open it here!
+            this.showAdvertForm = true; 
+
+            // Scroll up to see it
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
