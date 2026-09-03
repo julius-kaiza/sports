@@ -541,15 +541,15 @@ app.post("/api/admin/adverts", authenticate, requireAdmin, async (req, res) => {
     }
 });
 
-// DELETE ADVERT
+// DELETE ADVERT (Supports UUIDs and text/integer IDs)
 app.delete("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) => {
     try {
-        const id = validId(req.params.id);
+        const id = clean(req.params.id, 100);
         if (!id) {
             return res.status(400).json({ success: false, error: "Invalid advert ID." });
         }
 
-        const result = await pool.query(`DELETE FROM adverts WHERE id = $1 RETURNING id`, [id]);
+        const result = await pool.query(`DELETE FROM adverts WHERE id::text = $1 RETURNING id`, [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: "Advert not found." });
         }
@@ -560,10 +560,10 @@ app.delete("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res
     }
 });
 
-// UPDATE/EDIT ADVERT (supports both PUT and POST depending on your frontend implementation)
+// UPDATE/EDIT ADVERT (Supports UUIDs and text/integer IDs)
 app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) => {
     try {
-        const id = validId(req.params.id);
+        const id = clean(req.params.id, 100);
         const title = clean(req.body.title, 300);
         const media_url = clean(req.body.media_url, 2000);
         const body = clean(req.body.body, 5000);
@@ -578,7 +578,7 @@ app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) =
         }
 
         const result = await pool.query(
-            `UPDATE adverts SET title = $1, media_url = $2, body = $3, target_url = $4, media_type = $5 WHERE id = $6 RETURNING id`,
+            `UPDATE adverts SET title = $1, media_url = $2, body = $3, target_url = $4, media_type = $5 WHERE id::text = $6 RETURNING id`,
             [title, media_url, body, target_url, media_type, id]
         );
 
