@@ -1,10 +1,12 @@
+const path = require('path');
+const fs = require('fs').promises;
 const express = require("express");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const cors = require("cors");
-const path = require("path");
+
 
 const app = express();
 
