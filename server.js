@@ -517,6 +517,29 @@ app.post("/api/admin/settings/whatsapp", authenticate, requireAdmin, async (req,
         return res.status(500).json({ success: false, error: "Failed to update WhatsApp settings." });
     }
 });
+
+app.post("/api/admin/adverts", authenticate, requireAdmin, async (req, res) => {
+    try {
+        const title = clean(req.body.title, 300);
+        const media_url = clean(req.body.media_url, 2000);
+        const body = clean(req.body.body, 5000);
+        const target_url = clean(req.body.target_url, 2000);
+        const media_type = clean(req.body.media_type || "image", 50);
+
+        if (!title) {
+            return res.status(400).json({ success: false, error: "Advert title is required." });
+        }
+
+        await pool.query(
+            `INSERT INTO adverts (title, media_url, body, target_url, media_type) VALUES ($1, $2, $3, $4, $5)`,
+            [title, media_url, body, target_url, media_type]
+        );
+
+        return res.json({ success: true, message: "Advert published successfully." });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: "Failed to publish advert." });
+    }
+});
 /* ============================================================
    START SERVER
 ============================================================ */
