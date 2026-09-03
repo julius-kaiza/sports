@@ -492,7 +492,8 @@ app.post("/api/admin/publish", authenticate, async (req, res) => {
     }
 });
 
-// UPDATE POST ROUTE (PUT)
+
+// UPDATE POST ROUTE (PUT) - Prevents duplicates while allowing self-updates
 app.put("/api/admin/posts/:id", authenticate, async (req, res) => {
     try {
         const postId = validId(req.params.id);
@@ -506,6 +507,7 @@ app.put("/api/admin/posts/:id", authenticate, async (req, res) => {
             return res.status(400).json({ success: false, error: "Invalid story ID." });
         }
 
+        // 1. Check if the post exists and verify ownership/permissions
         const existing = await pool.query(`SELECT id, author FROM posts WHERE id = $1`, [postId]);
         if (existing.rows.length === 0) {
             return res.status(404).json({ success: false, error: "Story not found." });
@@ -515,6 +517,20 @@ app.put("/api/admin/posts/:id", authenticate, async (req, res) => {
             return res.status(403).json({ success: false, error: "Unauthorized to edit this story." });
         }
 
+        // 2. CHECK FOR DUPLICATES: Does another post already have this title?
+        const duplicateCheck = await pool.query(
+            `SELECT id FROM posts WHERE LOWER(TRIM(title)) = LOWER(TRIM($1)) AND id != $2 LIMIT 1`,
+            [title, postId]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: "Another story with this exact title already exists. Please choose a unique title." 
+            });
+        }
+
+        // 3. Perform the update safely
         await pool.query(
             `UPDATE posts SET type = $1, title = $2, body = $3, media_url = $4, category = $5 WHERE id = $6`,
             [type, title, body, media_url, category, postId]
@@ -525,6 +541,7 @@ app.put("/api/admin/posts/:id", authenticate, async (req, res) => {
         if (error.code === '23505') {
             return res.status(400).json({ success: false, error: "A story with this title already exists." });
         }
+        console.error('[Update Route Error]:', error);
         return res.status(500).json({ success: false, error: "Failed to update story." });
     }
 });
