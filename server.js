@@ -599,21 +599,9 @@ app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) =
 app.delete('/api/admin/posts/:id', async (req, res) => {
     try {
         const postId = req.params.id;
-        console.log(`[Delete Route] Attempting to delete post ID: ${postId}`);
+        console.log(`[Delete Route] Trying to delete ID: "${postId}" (Type: ${typeof postId})`);
 
-        // Safely resolve the absolute path to data.json
         const filePath = path.join(__dirname, 'data.json');
-
-        // 1. Check if data.json exists, if not, create it with an empty structure
-        try {
-            await fs.access(filePath);
-        } catch {
-            console.log('[Delete Route] data.json not found, creating a new one...');
-            const initialData = { users: [], posts: [], adverts: [], settings: {} };
-            await fs.writeFile(filePath, JSON.stringify(initialData, null, 2), 'utf8');
-        }
-
-        // 2. Read current data asynchronously
         let rawData = await fs.readFile(filePath, 'utf8');
         let data = JSON.parse(rawData);
 
@@ -621,23 +609,29 @@ app.delete('/api/admin/posts/:id', async (req, res) => {
             data.posts = [];
         }
 
-        // 3. Filter out the post to delete (handle both string and number IDs)
-        const initialLength = data.posts.length;
-        data.posts = data.posts.filter(p => String(p.id) !== String(postId));
-        console.log(`[Delete Route] Posts before: ${initialLength}, after filtering: ${data.posts.length}`);
+        // Print existing IDs in data.json to your server console logs for debugging
+        console.log('[Delete Route] Existing post IDs in data.json:', data.posts.map(p => ({ id: p.id, title: p.title })));
 
-        // 4. Save the updated data back to the file asynchronously
+        const initialLength = data.posts.length;
+        
+        // Filter out the post (checking both .id and ._id just in case)
+        data.posts = data.posts.filter(p => {
+            const currentId = p.id || p._id;
+            return String(currentId) !== String(postId);
+        });
+
+        console.log(`[Delete Route] Before count: ${initialLength}, After count: ${data.posts.length}`);
+
+        // Save the updated array back to data.json
         await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 
-        // 5. Send success response
         return res.json({ success: true, message: 'Post deleted successfully' });
 
     } catch (error) {
-        console.error('[Delete Route Critical Error]:', error);
+        console.error('[Delete Route Error]:', error);
         return res.status(500).json({ success: false, error: error.message });
     }
 });
-
 /* ============================================================
    START SERVER
 ============================================================ */
