@@ -594,13 +594,23 @@ app.put("/api/admin/adverts/:id", authenticate, requireAdmin, async (req, res) =
     }
 });
 
-// Add this route to your Express server backend
+const fs = require('fs');
+
 app.delete('/api/admin/posts/:id', async (req, res) => {
     try {
         const postId = req.params.id;
         
-        // TODO: Add code here to delete the post from your database/storage using postId
-        
+        // 1. Read your current data (adjust path/variable as needed)
+        let rawData = fs.readFileSync('data.json', 'utf8');
+        let data = JSON.parse(rawData);
+
+        // 2. Filter out the post to delete (handle both string and number IDs)
+        const initialLength = data.posts.length;
+        data.posts = data.posts.filter(p => String(p.id) !== String(postId));
+
+        // 3. Save the updated data back to the file
+        fs.writeFileSync('data.json', JSON.stringify(data, null, 2));
+
         res.json({ success: true, message: 'Post deleted successfully' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
