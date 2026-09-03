@@ -16,7 +16,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 const DATABASE_URL = process.env.DATABASE_URL;
-
+const JWT_SECRET = process.env.JWT_SECRET || "temporary_fallback_key_123";
 // Temporary debug and fallback to prevent crash loops
 let JWT_SECRET = process.env.JWT_SECRET;
 
