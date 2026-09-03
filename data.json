@@ -1,0 +1,29 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "password123"
+    }
+  ],
+  "posts": [
+    {
+      "id": "sample-post-1",
+      "title": "Welcome to ProPulse Sports Portal",
+      "content": "This is your first content post. You can edit or delete this from the admin backend.",
+      "category": "News",
+      "date": "2026-09-03"
+    }
+  ],
+  "adverts": [
+    {
+      "id": "sample-ad-1",
+      "title": "Featured Banner",
+      "image": "https://images.unsplash.com/photo-1518091043644-c1d4457512c6",
+      "link": "#"
+    }
+  ],
+  "settings": {
+    "siteName": "ProPulse Sports Portal"
+  }
+}
