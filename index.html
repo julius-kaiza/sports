@@ -1483,6 +1483,63 @@
 function sportsPortal() {
 
     return {
+        // --- PASTE THE EDITING CODE RIGHT HERE ---
+        editingAdvertId: null,
+        advertForm: {
+            title: '',
+            media_url: '',
+            target_url: '',
+            body: ''
+        },
+
+        editAdvert(ad) {
+            if (!ad) return;
+            this.editingAdvertId = ad.id;
+            this.advertForm = {
+                title: ad.title || '',
+                media_url: ad.media_url || '',
+                target_url: ad.target_url || '',
+                body: ad.body || ''
+            };
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        resetAdvertForm() {
+            this.editingAdvertId = null;
+            this.advertForm = {
+                title: '',
+                media_url: '',
+                target_url: '',
+                body: ''
+            };
+        },
+
+        async saveAdvert() {
+            if (!this.advertForm.title) {
+                alert('Please provide a title for the ad.');
+                return;
+            }
+
+            if (this.editingAdvertId) {
+                let index = this.data.adverts.findIndex(a => a.id === this.editingAdvertId);
+                if (index !== -1) {
+                    this.data.adverts[index] = { 
+                        ...this.data.adverts[index], 
+                        ...this.advertForm 
+                    };
+                }
+                alert('Ad updated successfully!');
+            } else {
+                let newAd = { 
+                    id: Date.now(), 
+                    ...this.advertForm 
+                };
+                this.data.adverts.push(newAd);
+                alert('Ad created successfully!');
+            }
+
+            this.resetAdvertForm();
+        },
 
         /* =====================================================
            APPLICATION STATE
