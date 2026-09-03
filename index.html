@@ -302,7 +302,14 @@
                     <template
                         x-if="isLoggedIn && userRole === 'admin'"
                     >
-
+                        <!-- Edit Button -->
+                        <button 
+                            type="button"
+                            @click="editAdvert(ad)" 
+                            class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition">
+                            Edit
+                        </button>
+                        
                         <button
                             type="button"
                             @click="deleteAdvert(ad.id)"
@@ -2951,6 +2958,31 @@ function sportsPortal() {
 
         },
 
+        /* =====================================================
+            EDIT AD
+        ===================================================== */
+
+        async editAdvert(ad) {
+            if (!ad || !ad.id) {
+                return;
+            }
+
+            // Populate your form object with the ad's current values
+            this.editingAdvertId = ad.id;
+            this.advertForm = {
+                title: ad.title || '',
+                media_url: ad.media_url || '',
+                body: ad.body || '',
+                target_url: ad.target_url || '',
+                media_type: ad.media_type || 'image'
+            };
+
+            // Smoothly scroll up to the form so you can see it filling up
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        },
 
         /* =====================================================
            GOOGLE PAY
