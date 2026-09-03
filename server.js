@@ -489,6 +489,34 @@ app.post("/api/admin/publish", authenticate, async (req, res) => {
     }
 });
 
+app.post("/api/admin/settings/whatsapp", authenticate, requireAdmin, async (req, res) => {
+    try {
+        const phone = clean(req.body.whatsapp_phone, 50);
+        const message = clean(req.body.whatsapp_message, 1000);
+
+        if (!phone) {
+            return res.status(400).json({ success: false, error: "WhatsApp phone number is required." });
+        }
+
+        // Update or insert whatsapp_phone
+        await pool.query(
+            `INSERT INTO site_settings (setting_key, setting_value) VALUES ('whatsapp_phone', $1)
+             ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()`,
+            [phone]
+        );
+
+        // Update or insert whatsapp_message
+        await pool.query(
+            `INSERT INTO site_settings (setting_key, setting_value) VALUES ('whatsapp_message', $1)
+             ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()`,
+            [message]
+        );
+
+        return res.json({ success: true, message: "WhatsApp settings updated successfully." });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: "Failed to update WhatsApp settings." });
+    }
+});
 /* ============================================================
    START SERVER
 ============================================================ */
